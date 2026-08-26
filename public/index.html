@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI Interview</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #f5f5f7;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    padding: 24px;
+  }
+  .app {
+    width: 100%;
+    max-width: 640px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    height: 90vh;
+    overflow: hidden;
+  }
+  header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #eee;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  #voiceToggleLabel {
+    font-size: 13px;
+    font-weight: 400;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  #setup {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  #setup input {
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+  }
+  #setup button, #chat button {
+    padding: 10px 16px;
+    background: #111;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  #setup button:hover, #chat button:hover { background: #333; }
+  #chat {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+  }
+  #messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .msg {
+    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  .msg.ai {
+    background: #eee;
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+  }
+  .msg.user {
+    background: #111;
+    color: #fff;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+  }
+  .topic-tag {
+    font-size: 11px;
+    color: #888;
+    margin-bottom: 4px;
+  }
+  #inputRow {
+    display: flex;
+    gap: 8px;
+    padding: 16px 20px;
+    border-top: 1px solid #eee;
+    align-items: flex-end;
+  }
+  #answerInput {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    resize: none;
+  }
+  #micBtn {
+    background: #eee;
+    color: #111;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  #micBtn.recording {
+    background: #e03131;
+    color: #fff;
+    animation: pulse 1.2s infinite;
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(224,49,49,0.5); }
+    70% { box-shadow: 0 0 0 10px rgba(224,49,49,0); }
+    100% { box-shadow: 0 0 0 0 rgba(224,49,49,0); }
+  }
+  #summary {
+    display: none;
+    padding: 20px;
+    font-size: 14px;
+    line-height: 1.6;
+    overflow-y: auto;
+  }
+  #summary h3 { margin-top: 16px; }
+  .loading { color: #888; font-size: 13px; padding: 8px 20px; }
+  .voice-status {
+    font-size: 12px;
+    color: #888;
+    padding: 0 20px 8px;
+    min-height: 16px;
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <span>AI Interview</span>
+    <label id="voiceToggleLabel">
+      <input type="checkbox" id="voiceToggle" checked />
+      Voice
+    </label>
+  </header>
+
+  <div id="setup">
+    <input id="nameInput" placeholder="Your name" />
+    <input id="emailInput" placeholder="Your email" />
+    <input id="topicsInput" placeholder="Topics you know (comma separated, e.g. React, Node.js)" />
+    <button onclick="startInterview()">Start Interview</button>
+  </div>
+
+  <div id="chat">
+    <div id="messages"></div>
+    <div class="voice-status" id="voiceStatus"></div>
+    <div id="inputRow">
+      <button id="micBtn" onclick="toggleRecording()" title="Click to speak">🎤</button>
+      <textarea id="answerInput" rows="2" placeholder="Type your answer, or click the mic to speak..."></textarea>
+      <button onclick="submitAnswer()">Send</button>
+    </div>
+  </div>
+
+  <div id="summary"></div>
+</div>
+
+<script>
+  const API_BASE = "http://localhost:3000/api";
+  let sessionId = null;
+  let currentQuestion = null;
+
+  // ---------- Voice setup ----------
+  const voiceToggle = document.getElementById("voiceToggle");
+  const micBtn = document.getElementById("micBtn");
+  const voiceStatus = document.getElementById("voiceStatus");
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let recognition = null;
+  let isRecording = false;
+
+  if (SpeechRecognition) {
+    recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+
+    recognition.onstart = () => {
+      isRecording = true;
+      micBtn.classList.add("recording");
+      voiceStatus.textContent = "Listening...";
+    };
+
+    let lastTranscript = "";
+
+    recognition.onresult = (event) => {
+      let transcript = "";
+      for (let i = 0; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+      document.getElementById("answerInput").value = transcript;
+      lastTranscript = transcript.trim();
+    };
+
+    recognition.onerror = (event) => {
+      voiceStatus.textContent = "Mic error: " + event.error;
+      stopRecording();
+    };
+
+    // Browser fires onend automatically once it detects the person stopped talking.
+    // If we captured a transcript, auto-submit it as the answer.
+    recognition.onend = () => {
+      stopRecording();
+      if (lastTranscript) {
+        voiceStatus.textContent = "Answer captured, sending...";
+        submitAnswer();
+        lastTranscript = "";
+      }
+    };
+  } else {
+    micBtn.style.display = "none";
+  }
+
+  function toggleRecording() {
+    if (!recognition) return;
+    if (isRecording) {
+      recognition.stop();
+    } else {
+      document.getElementById("answerInput").value = "";
+      recognition.start();
+    }
+  }
+
+  function stopRecording() {
+    isRecording = false;
+    micBtn.classList.remove("recording");
+    voiceStatus.textContent = "";
+  }
+
+  function speak(text) {
+    if (!voiceToggle.checked) return;
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel(); // stop any prior speech
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+    window.speechSynthesis.speak(utterance);
+  }
+
+  // ---------- Chat logic ----------
+  function addMessage(text, sender, topic) {
+    const messages = document.getElementById("messages");
+    const div = document.createElement("div");
+    div.className = "msg " + sender;
+    if (topic && sender === "ai") {
+      div.innerHTML = `<div class="topic-tag">${topic}</div>${text}`;
+    } else {
+      div.textContent = text;
+    }
+    messages.appendChild(div);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  function showLoading(show) {
+    let el = document.getElementById("loadingMsg");
+    if (show && !el) {
+      el = document.createElement("div");
+      el.id = "loadingMsg";
+      el.className = "loading";
+      el.textContent = "Thinking...";
+      document.getElementById("messages").appendChild(el);
+      document.getElementById("messages").scrollTop = 999999;
+    } else if (!show && el) {
+      el.remove();
+    }
+  }
+
+  async function startInterview() {
+    const name = document.getElementById("nameInput").value.trim();
+    const email = document.getElementById("emailInput").value.trim();
+    const topicsRaw = document.getElementById("topicsInput").value.trim();
+
+    if (!name || !email || !topicsRaw) {
+      alert("Please fill in all fields");
+      return;
+    }
+
+    const knownTopics = topicsRaw.split(",").map(t => t.trim()).filter(Boolean);
+
+    document.getElementById("setup").style.display = "none";
+    document.getElementById("chat").style.display = "flex";
+    showLoading(true);
+
+    const res = await fetch(`${API_BASE}/interview/start`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, knownTopics }),
+    });
+    const data = await res.json();
+    showLoading(false);
+
+    if (data.error) {
+      addMessage("Error: " + data.error, "ai");
+      return;
+    }
+
+    sessionId = data.sessionId;
+    currentQuestion = data.question;
+    addMessage(data.question, "ai", data.topic);
+    speak(data.question);
+  }
+
+  async function submitAnswer() {
+    const input = document.getElementById("answerInput");
+    const answer = input.value.trim();
+    if (!answer) return;
+
+    addMessage(answer, "user");
+    input.value = "";
+    voiceStatus.textContent = "";
+    showLoading(true);
+
+    const res = await fetch(`${API_BASE}/interview/answer`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId, question: currentQuestion, answer }),
+    });
+    const data = await res.json();
+    showLoading(false);
+
+    if (data.error) {
+      addMessage("Error: " + data.error, "ai");
+      return;
+    }
+
+    if (data.done) {
+      document.getElementById("chat").style.display = "none";
+      renderSummary(data.summary);
+      speak("The interview is complete. Here is your summary.");
+      return;
+    }
+
+    currentQuestion = data.question;
+    addMessage(data.question, "ai", data.topic);
+    speak(data.question);
+  }
+
+  function renderSummary(summary) {
+    const el = document.getElementById("summary");
+    el.style.display = "block";
+
+    const topicScores = Object.entries(summary.topic_scores || {})
+      .map(([topic, score]) => `<li><strong>${topic}:</strong> ${score}</li>`)
+      .join("");
+
+    const strengths = (summary.strengths || []).map(s => `<li>${s}</li>`).join("");
+    const weaknesses = (summary.weaknesses || []).map(w => `<li>${w}</li>`).join("");
+
+    el.innerHTML = `
+      <h2>Interview Summary</h2>
+      <p>${summary.overall_summary || ""}</p>
+      <h3>Topic Scores</h3>
+      <ul>${topicScores}</ul>
+      <h3>Strengths</h3>
+      <ul>${strengths}</ul>
+      <h3>Areas to Improve</h3>
+      <ul>${weaknesses}</ul>
+    `;
+  }
+
+  document.getElementById("answerInput").addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      submitAnswer();
+    }
+  });
+</script>
+
+</body>
+</html>

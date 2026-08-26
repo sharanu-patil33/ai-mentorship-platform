@@ -1,0 +1,28 @@
+{
+  "name": "ai-mentorship-platform",
+  "version": "1.0.0",
+  "description": "Team project: AI-driven student interview, mentorship, and portfolio-building platform.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sharanu-patil33/ai-mentorship-platform.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/sharanu-patil33/ai-mentorship-platform/issues"
+  },
+  "homepage": "https://github.com/sharanu-patil33/ai-mentorship-platform#readme",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.112.4",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "groq-sdk": "^1.6.0"
+  }
+}
