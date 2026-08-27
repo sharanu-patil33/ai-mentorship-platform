@@ -153,6 +153,35 @@
     padding: 0 20px 8px;
     min-height: 16px;
   }
+  .program-card {
+    border: 2px solid #eee;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .program-card:hover { border-color: #ccc; }
+  .program-card.selected { border-color: #111; background: #fafafa; }
+  .program-card .badge {
+    display: inline-block;
+    font-size: 11px;
+    background: #111;
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-bottom: 6px;
+  }
+  .program-card h4 { margin: 0 0 4px; }
+  .program-card p { margin: 0; font-size: 13px; color: #666; }
+  #confirmPrograms {
+    margin-top: 12px;
+    width: 100%;
+  }
+  #confirmPrograms:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  }
 </style>
 </head>
 <body>
@@ -184,12 +213,14 @@
   </div>
 
   <div id="summary"></div>
+  <div id="programSelection" style="display:none; padding:20px; overflow-y:auto;"></div>
 </div>
 
 <script>
   const API_BASE = "http://localhost:3000/api";
   let sessionId = null;
   let currentQuestion = null;
+  let studentId = null;
 
   // ---------- Voice setup ----------
   const voiceToggle = document.getElementById("voiceToggle");
@@ -200,19 +231,20 @@
   let recognition = null;
   let isRecording = false;
 
+  let lastTranscript = "";
+  let userStoppedManually = false;
+
   if (SpeechRecognition) {
     recognition = new SpeechRecognition();
-    recognition.continuous = false;
+    recognition.continuous = true; // keep listening through natural pauses
     recognition.interimResults = true;
     recognition.lang = "en-US";
 
     recognition.onstart = () => {
       isRecording = true;
       micBtn.classList.add("recording");
-      voiceStatus.textContent = "Listening...";
+      voiceStatus.textContent = "Listening... click mic again when you're done";
     };
-
-    let lastTranscript = "";
 
     recognition.onresult = (event) => {
       let transcript = "";
@@ -224,19 +256,25 @@
     };
 
     recognition.onerror = (event) => {
-      voiceStatus.textContent = "Mic error: " + event.error;
-      stopRecording();
+      // "no-speech" fires often with continuous mode during pauses — ignore it, keep listening
+      if (event.error !== "no-speech") {
+        voiceStatus.textContent = "Mic error: " + event.error;
+        stopRecording();
+      }
     };
 
-    // Browser fires onend automatically once it detects the person stopped talking.
-    // If we captured a transcript, auto-submit it as the answer.
+    // With continuous=true, this fires either when the user manually stops it,
+    // or occasionally when the browser's own connection times out. Only submit
+    // if the user actually clicked stop themselves.
     recognition.onend = () => {
+      const wasManualStop = userStoppedManually;
       stopRecording();
-      if (lastTranscript) {
+      if (wasManualStop && lastTranscript) {
         voiceStatus.textContent = "Answer captured, sending...";
         submitAnswer();
         lastTranscript = "";
       }
+      userStoppedManually = false;
     };
   } else {
     micBtn.style.display = "none";
@@ -245,9 +283,12 @@
   function toggleRecording() {
     if (!recognition) return;
     if (isRecording) {
+      userStoppedManually = true;
       recognition.stop();
     } else {
       document.getElementById("answerInput").value = "";
+      lastTranscript = "";
+      userStoppedManually = false;
       recognition.start();
     }
   }
@@ -326,6 +367,7 @@
     }
 
     sessionId = data.sessionId;
+    studentId = data.studentId;
     currentQuestion = data.question;
     addMessage(data.question, "ai", data.topic);
     speak(data.question);
@@ -358,6 +400,7 @@
       document.getElementById("chat").style.display = "none";
       renderSummary(data.summary);
       speak("The interview is complete. Here is your summary.");
+      showViewProgramsButton();
       return;
     }
 
@@ -395,6 +438,20 @@
       submitAnswer();
     }
   });
+
+  function showViewProgramsButton() {
+    const el = document.getElementById("programSelection");
+    el.style.display = "block";
+    el.innerHTML = `
+      <button onclick="goToPrograms()" style="width:100%; padding:14px; font-size:15px;">
+        View All Program Details →
+      </button>
+    `;
+  }
+
+  function goToPrograms() {
+    window.location.href = `programs.html?sessionId=${sessionId}&studentId=${studentId}`;
+  }
 </script>
 
 </body>

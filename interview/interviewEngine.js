@@ -182,3 +182,32 @@ Respond ONLY in JSON, no markdown fences:
 
   return summary;
 }
+
+// 6. Recommend 2 of 4 programs based on the interview summary
+export async function recommendPrograms(summary) {
+  const { data: allPrograms, error } = await supabase.from("programs").select("*");
+  if (error) throw error;
+
+  const systemPrompt = `You are an academic advisor. Based on a student's interview summary,
+recommend exactly 2 of these 4 programs that best fit their current skill level and gaps.
+Programs available: ${allPrograms.map((p) => p.name).join(", ")}.
+Respond ONLY in JSON, no markdown fences: {"recommended": ["Program Name 1", "Program Name 2"], "reasoning": "one sentence why"}`;
+
+  const completion = await groq.chat.completions.create({
+    model: MODEL,
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: JSON.stringify(summary) },
+    ],
+    temperature: 0.3,
+  });
+
+  const raw = completion.choices[0].message.content.trim().replace(/```json|```/g, "");
+  const result = JSON.parse(raw);
+
+  return {
+    allPrograms,
+    recommended: result.recommended,
+    reasoning: result.reasoning,
+  };
+}
