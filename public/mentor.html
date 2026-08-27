@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mentor Dashboard</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #f5f5f7;
+    margin: 0;
+    padding: 24px;
+  }
+  .app {
+    max-width: 720px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    padding: 24px;
+  }
+  h1 { margin-top: 0; font-size: 20px; }
+  #searchRow {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  #searchRow input {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+  }
+  #searchRow button {
+    padding: 10px 16px;
+    background: #111;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .student-header {
+    padding: 12px 16px;
+    background: #fafafa;
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+  .program-block {
+    border: 1px solid #eee;
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .program-block h3 {
+    margin: 0 0 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .program-status {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: #eee;
+    font-weight: normal;
+  }
+  .program-status.completed { background: #d3f9d8; color: #2b8a3e; }
+  .concept-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-top: 1px solid #f0f0f0;
+    gap: 10px;
+  }
+  .concept-row:first-of-type { border-top: none; }
+  .concept-name { font-size: 14px; flex: 1; }
+  select.status-select {
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    font-size: 13px;
+  }
+  textarea.notes-input {
+    width: 100%;
+    margin-top: 6px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    font-size: 13px;
+    resize: vertical;
+  }
+  .concept-full { display: flex; flex-direction: column; width: 100%; padding: 10px 0; border-top: 1px solid #f0f0f0; }
+  .concept-full:first-of-type { border-top: none; }
+  .concept-top-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .save-hint { font-size: 11px; color: #999; margin-top: 4px; }
+  .error { color: #e03131; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <h1>Mentor Dashboard</h1>
+  <div id="searchRow">
+    <input id="emailInput" placeholder="Student email" />
+    <button onclick="searchStudent()">Search</button>
+  </div>
+  <div id="result"></div>
+</div>
+
+<script>
+  const API_BASE = "http://localhost:3000/api";
+
+  async function searchStudent() {
+    const email = document.getElementById("emailInput").value.trim();
+    const resultEl = document.getElementById("result");
+    if (!email) return;
+
+    resultEl.innerHTML = "<p>Loading...</p>";
+
+    const res = await fetch(`${API_BASE}/mentor/student?email=${encodeURIComponent(email)}`);
+    const data = await res.json();
+
+    if (data.error) {
+      resultEl.innerHTML = `<p class="error">${data.error}</p>`;
+      return;
+    }
+
+    renderStudent(data);
+  }
+
+  function renderStudent(data) {
+    const resultEl = document.getElementById("result");
+
+    const header = `
+      <div class="student-header">
+        <strong>${data.student.name}</strong> — ${data.student.email}<br/>
+        <span style="font-size:13px; color:#666;">Known topics: ${(data.student.known_topics || []).join(", ")}</span>
+      </div>
+    `;
+
+    if (!data.programs.length) {
+      resultEl.innerHTML = header + "<p>No programs selected yet.</p>";
+      return;
+    }
+
+    const programBlocks = data.programs.map(p => `
+      <div class="program-block">
+        <h3>${p.programName} <span class="program-status ${p.status}">${p.status.replace('_', ' ')}</span></h3>
+        <div class="source" style="font-size:12px;color:#999;margin-bottom:8px;">${p.source === 'recommended' ? 'AI recommended' : 'Self-selected'}</div>
+        ${p.concepts.map(c => `
+          <div class="concept-full" data-concept-id="${c.id}">
+            <div class="concept-top-row">
+              <span class="concept-name">${c.concept_name}</span>
+              <select class="status-select" onchange="updateConcept('${c.id}', this.value, null)">
+                <option value="not_started" ${c.status === 'not_started' ? 'selected' : ''}>Not started</option>
+                <option value="in_progress" ${c.status === 'in_progress' ? 'selected' : ''}>In progress</option>
+                <option value="completed" ${c.status === 'completed' ? 'selected' : ''}>Completed</option>
+                <option value="needs_review" ${c.status === 'needs_review' ? 'selected' : ''}>Needs review</option>
+              </select>
+            </div>
+            <textarea class="notes-input" rows="1" placeholder="Mentor notes..."
+              onblur="updateConcept('${c.id}', null, this.value)">${c.mentor_notes || ''}</textarea>
+          </div>
+        `).join("")}
+      </div>
+    `).join("");
+
+    resultEl.innerHTML = header + programBlocks;
+  }
+
+  async function updateConcept(conceptId, status, mentorNotes) {
+    const body = {};
+    if (status !== null) body.status = status;
+    if (mentorNotes !== null) body.mentorNotes = mentorNotes;
+
+    const res = await fetch(`${API_BASE}/mentor/concept-progress/${conceptId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+
+    if (data.error) {
+      alert("Error saving: " + data.error);
+      return;
+    }
+
+    // Quick visual confirmation
+    const row = document.querySelector(`[data-concept-id="${conceptId}"]`);
+    if (row) {
+      row.style.background = "#f4fff4";
+      setTimeout(() => { row.style.background = ""; }, 600);
+    }
+  }
+</script>
+
+</body>
+</html>

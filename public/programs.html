@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Choose Your Programs</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #f5f5f7;
+    margin: 0;
+    padding: 24px;
+  }
+  .app {
+    max-width: 780px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    padding: 28px;
+  }
+  h1 { margin-top: 0; }
+  .reasoning {
+    background: #f5f5f7;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 20px;
+  }
+  .program-card {
+    border: 2px solid #eee;
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .program-card:hover { border-color: #ccc; }
+  .program-card.selected { border-color: #111; background: #fafafa; }
+  .program-card .badge {
+    display: inline-block;
+    font-size: 11px;
+    background: #111;
+    color: #fff;
+    padding: 3px 10px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+  }
+  .program-card h3 { margin: 0 0 4px; }
+  .program-card > p { margin: 0 0 12px; font-size: 14px; color: #666; }
+  .concept-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 16px;
+    font-size: 13px;
+    color: #444;
+    margin-top: 8px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+  }
+  .concept-list div::before {
+    content: "•";
+    margin-right: 6px;
+    color: #999;
+  }
+  #confirmBar {
+    position: sticky;
+    bottom: 0;
+    background: #fff;
+    padding-top: 16px;
+    margin-top: 8px;
+  }
+  #confirmPrograms {
+    width: 100%;
+    padding: 14px;
+    background: #111;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    cursor: pointer;
+  }
+  #confirmPrograms:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  }
+  .selection-count {
+    text-align: center;
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 8px;
+  }
+  .error { color: #e03131; }
+  .done-screen a {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 10px 16px;
+    background: #111;
+    color: #fff;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 14px;
+  }
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <p>Loading programs...</p>
+</div>
+
+<script>
+  const API_BASE = "http://localhost:3000/api";
+  const params = new URLSearchParams(window.location.search);
+  const sessionId = params.get("sessionId");
+  const studentId = params.get("studentId");
+
+  let programsData = [];
+  let selectedIds = new Set();
+
+  async function init() {
+    const app = document.getElementById("app");
+
+    if (!sessionId || !studentId) {
+      app.innerHTML = `<p class="error">Missing session or student info. Please complete the interview first.</p>`;
+      return;
+    }
+
+    const res = await fetch(`${API_BASE}/interview/${sessionId}/recommend-programs`);
+    const data = await res.json();
+
+    if (data.error) {
+      app.innerHTML = `<p class="error">${data.error}</p>`;
+      return;
+    }
+
+    programsData = data.programs;
+    selectedIds = new Set(data.programs.filter(p => p.recommended).map(p => p.id));
+
+    render(data.reasoning);
+  }
+
+  function render(reasoning) {
+    const app = document.getElementById("app");
+
+    const cards = programsData.map(p => `
+      <div class="program-card ${selectedIds.has(p.id) ? 'selected' : ''}" data-id="${p.id}" onclick="toggle('${p.id}')">
+        ${p.recommended ? '<div class="badge">Recommended for you</div>' : ''}
+        <h3>${p.name}</h3>
+        <p>${p.description}</p>
+        <div class="concept-list">
+          ${p.concepts.map(c => `<div>${c}</div>`).join("")}
+        </div>
+      </div>
+    `).join("");
+
+    app.innerHTML = `
+      <h1>Choose Your Programs</h1>
+      <div class="reasoning">${reasoning || "Pick any 2 programs to enroll in."}</div>
+      ${cards}
+      <div id="confirmBar">
+        <div class="selection-count" id="selectionCount"></div>
+        <button id="confirmPrograms" onclick="confirmSelection()">Confirm Selection</button>
+      </div>
+    `;
+
+    updateState();
+  }
+
+  function toggle(id) {
+    if (selectedIds.has(id)) {
+      selectedIds.delete(id);
+    } else {
+      if (selectedIds.size >= 2) {
+        const first = selectedIds.values().next().value;
+        selectedIds.delete(first);
+      }
+      selectedIds.add(id);
+    }
+    document.querySelectorAll(".program-card").forEach(card => {
+      card.classList.toggle("selected", selectedIds.has(card.dataset.id));
+    });
+    updateState();
+  }
+
+  function updateState() {
+    document.getElementById("selectionCount").textContent = `${selectedIds.size} of 2 selected`;
+    const btn = document.getElementById("confirmPrograms");
+    btn.disabled = selectedIds.size !== 2;
+  }
+
+  async function confirmSelection() {
+    if (selectedIds.size !== 2) return;
+
+    const btn = document.getElementById("confirmPrograms");
+    btn.disabled = true;
+    btn.textContent = "Enrolling...";
+
+    const selections = Array.from(selectedIds).map(id => {
+      const program = programsData.find(p => p.id === id);
+      return { programId: id, source: program.recommended ? "recommended" : "self_selected" };
+    });
+
+    const res = await fetch(`${API_BASE}/student/${studentId}/select-programs`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ selections }),
+    });
+    const data = await res.json();
+
+    if (data.error) {
+      alert("Error: " + data.error);
+      btn.disabled = false;
+      btn.textContent = "Confirm Selection";
+      return;
+    }
+
+    document.getElementById("app").innerHTML = `
+      <div class="done-screen">
+        <h1>You're all set!</h1>
+        <p>You've been enrolled in: <strong>${data.selections.map(s => s.program).join(", ")}</strong></p>
+        <p style="color:#666; font-size:14px;">Your mentor will guide you through each concept in your upcoming Zoom sessions.</p>
+        <a href="dashboard.html?studentId=${studentId}">📊 View My Progress</a>
+      </div>
+    `;
+  }
+
+  init();
+</script>
+
+</body>
+</html>
