@@ -106,38 +106,21 @@
 
 <div class="app">
   <h1>My Progress</h1>
-  <div id="loadRow">
-    <input id="emailInput" placeholder="Your email" />
-    <button onclick="loadDashboardByEmail()">View</button>
-  </div>
   <div id="result"></div>
 </div>
 
 <script>
   const API_BASE = "http://localhost:3000/api";
 
-  // Auto-load via URL param if present, e.g. dashboard.html?studentId=xxxx (used by the direct link after program selection)
+  // Prefer the logged-in session; fall back to a studentId in the URL (used by the direct link after program selection)
   const params = new URLSearchParams(window.location.search);
-  if (params.get("studentId")) {
-    loadDashboardById(params.get("studentId"));
-  }
+  const loggedInStudentId = localStorage.getItem("studentId");
+  const studentIdToLoad = loggedInStudentId || params.get("studentId");
 
-  async function loadDashboardByEmail() {
-    const email = document.getElementById("emailInput").value.trim();
-    const resultEl = document.getElementById("result");
-    if (!email) return;
-
-    resultEl.innerHTML = "<p>Loading...</p>";
-
-    const res = await fetch(`${API_BASE}/student/dashboard?email=${encodeURIComponent(email)}`);
-    const data = await res.json();
-
-    if (data.error) {
-      resultEl.innerHTML = `<p class="error">${data.error}</p>`;
-      return;
-    }
-
-    renderDashboard(data);
+  if (!studentIdToLoad) {
+    window.location.href = "auth.html";
+  } else {
+    loadDashboardById(studentIdToLoad);
   }
 
   async function loadDashboardById(studentId) {

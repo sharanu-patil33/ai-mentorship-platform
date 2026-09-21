@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Student Dashboard</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #f5f5f7;
+    min-height: 100vh;
+  }
+  header {
+    background: #111;
+    color: #fff;
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  header h1 { font-size: 18px; font-weight: 600; }
+  .user-info { font-size: 13px; color: #ccc; display: flex; align-items: center; gap: 14px; }
+  .logout-btn {
+    background: transparent;
+    border: 1px solid #555;
+    color: #ccc;
+    padding: 5px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  .logout-btn:hover { border-color: #fff; color: #fff; }
+  .container { max-width: 900px; margin: 0 auto; padding: 28px 20px; }
+  .welcome {
+    margin-bottom: 24px;
+  }
+  .welcome h2 { font-size: 22px; margin-bottom: 4px; }
+  .welcome p { font-size: 14px; color: #666; }
+  .status-bar {
+    background: #fff;
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    display: flex;
+    gap: 0;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .step {
+    flex: 1;
+    text-align: center;
+    padding: 8px 4px;
+    font-size: 12px;
+    color: #aaa;
+    position: relative;
+  }
+  .step.done { color: #2b8a3e; }
+  .step.active { color: #111; font-weight: 600; }
+  .step-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: #ddd;
+    margin: 0 auto 6px;
+  }
+  .step.done .step-dot { background: #2b8a3e; }
+  .step.active .step-dot { background: #111; }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 22px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    text-decoration: none;
+    color: inherit;
+  }
+  .card:hover { border-color: #111; box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
+  .card.locked { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+  .card.completed { border-color: #d3f9d8; }
+  .card-icon { font-size: 28px; }
+  .card-title { font-size: 16px; font-weight: 600; }
+  .card-desc { font-size: 13px; color: #666; line-height: 1.4; }
+  .card-status {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 10px;
+    display: inline-block;
+    width: fit-content;
+  }
+  .status-done { background: #d3f9d8; color: #2b8a3e; }
+  .status-pending { background: #fff3bf; color: #e67700; }
+  .status-locked { background: #f1f3f5; color: #aaa; }
+  .status-active { background: #111; color: #fff; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>AI Mentorship Platform</h1>
+  <div class="user-info">
+    <span id="headerName">Loading...</span>
+    <button class="logout-btn" onclick="logout()">Log Out</button>
+  </div>
+</header>
+
+<div class="container">
+  <div class="welcome">
+    <h2 id="welcomeMsg">Welcome!</h2>
+    <p id="welcomeSub">Here's your learning journey at a glance.</p>
+  </div>
+
+  <div class="status-bar" id="statusBar">
+    <div class="step" id="step1"><div class="step-dot"></div>AI Interview</div>
+    <div class="step" id="step2"><div class="step-dot"></div>Choose Programs</div>
+    <div class="step" id="step3"><div class="step-dot"></div>Learn & Practice</div>
+    <div class="step" id="step4"><div class="step-dot"></div>Submit Projects</div>
+    <div class="step" id="step5"><div class="step-dot"></div>Final Interview</div>
+    <div class="step" id="step6"><div class="step-dot"></div>Resume & Jobs</div>
+  </div>
+
+  <div class="grid" id="cardsGrid">
+    <p style="color:#999; font-size:14px;">Loading your dashboard...</p>
+  </div>
+</div>
+
+<script>
+  const API_BASE = "http://localhost:3000/api";
+
+  const studentId = localStorage.getItem("studentId");
+  const studentName = localStorage.getItem("studentName");
+
+  if (!studentId) {
+    localStorage.removeItem("studentId");
+    localStorage.removeItem("studentName");
+    window.location.href = "auth.html";
+  }
+
+  document.getElementById("headerName").textContent = studentName || "Student";
+  document.getElementById("welcomeMsg").textContent = `Welcome back, ${studentName || "there"}!`;
+
+  function logout() {
+    localStorage.removeItem("studentId");
+    localStorage.removeItem("studentName");
+    window.location.href = "auth.html";
+  }
+
+  async function loadDashboard() {
+    // Check interview status
+    const interviewRes = await fetch(`${API_BASE}/student/${studentId}/interview-status`);
+    const interviewData = await interviewRes.json();
+
+    const hasInterview = interviewData.hasCompletedInterview;
+    const sessionId = interviewData.sessionId;
+
+    // Check program status
+    const dashRes = await fetch(`${API_BASE}/student/${studentId}/dashboard`);
+    const dashData = await dashRes.json();
+
+    const hasPrograms = dashData.programs && dashData.programs.length > 0;
+    const completedConcepts = hasPrograms && dashData.programs.every(p => p.status === "completed");
+
+    // Update step indicators
+    if (hasInterview) markStep("step1", "done");
+    else markStep("step1", "active");
+
+    if (hasPrograms) markStep("step2", "done");
+    else if (hasInterview) markStep("step2", "active");
+
+    if (hasPrograms) markStep("step3", "active");
+    if (completedConcepts) markStep("step4", "active");
+
+    renderCards(hasInterview, hasPrograms, dashData, sessionId);
+  }
+
+  function markStep(id, state) {
+    const el = document.getElementById(id);
+    el.className = "step " + (state === "done" ? "done" : state === "active" ? "active" : "");
+  }
+
+  function renderCards(hasInterview, hasPrograms, data, sessionId) {
+    const grid = document.getElementById("cardsGrid");
+
+    const cards = [
+      {
+        icon: "🎙️",
+        title: "AI Interview",
+        desc: hasInterview
+          ? "You've completed your initial interview. View your performance summary."
+          : "Start your first AI-powered viva to assess your current knowledge.",
+        status: hasInterview ? "done" : "active",
+        statusLabel: hasInterview ? "Completed" : "Start Now",
+        href: hasInterview ? `interview-summary.html?sessionId=${sessionId}` : "index.html",
+        locked: false,
+      },
+      {
+        icon: "📚",
+        title: "Choose Programs",
+        desc: hasPrograms
+          ? `Enrolled in: ${data.programs.map(p => p.programName).join(", ")}`
+          : "Pick 2 programs based on your interview results.",
+        status: hasPrograms ? "done" : hasInterview ? "pending" : "locked",
+        statusLabel: hasPrograms ? "Enrolled" : hasInterview ? "Choose Now" : "Complete interview first",
+        href: hasInterview && !hasPrograms ? `programs.html?sessionId=${sessionId}&studentId=${studentId}` : "#",
+        locked: !hasInterview || hasPrograms,
+      },
+      {
+        icon: "📈",
+        title: "My Progress",
+        desc: hasPrograms
+          ? `Track your concept progress across your enrolled programs.`
+          : "Enroll in programs first to track your progress.",
+        status: hasPrograms ? "pending" : "locked",
+        statusLabel: hasPrograms ? "View Progress" : "Locked",
+        href: "dashboard.html",
+        locked: !hasPrograms,
+      },
+      {
+        icon: "💬",
+        title: "Discourse & Zoom",
+        desc: "Join your mentor's sessions, ask questions, and collaborate with peers.",
+        status: hasPrograms ? "active" : "locked",
+        statusLabel: hasPrograms ? "Join Session" : "Locked",
+        href: "#",
+        locked: !hasPrograms,
+      },
+      {
+        icon: "🗂️",
+        title: "Project Submission",
+        desc: "Submit your program projects for mentor review.",
+        status: "locked",
+        statusLabel: "Coming Soon",
+        href: "#",
+        locked: true,
+      },
+      {
+        icon: "📄",
+        title: "My Resume",
+        desc: "AI-generated resume built from your interview, courses, and projects.",
+        status: "locked",
+        statusLabel: "Complete programs first",
+        href: "#",
+        locked: true,
+      },
+    ];
+
+    grid.innerHTML = cards.map(c => `
+      <a class="card ${c.locked ? 'locked' : ''} ${c.status === 'done' ? 'completed' : ''}"
+         href="${c.locked ? '#' : c.href}">
+        <div class="card-icon">${c.icon}</div>
+        <div class="card-title">${c.title}</div>
+        <div class="card-desc">${c.desc}</div>
+        <span class="card-status ${
+          c.status === 'done' ? 'status-done' :
+          c.status === 'active' ? 'status-active' :
+          c.status === 'pending' ? 'status-pending' :
+          'status-locked'
+        }">${c.statusLabel}</span>
+      </a>
+    `).join("");
+  }
+
+  loadDashboard();
+</script>
+
+</body>
+</html>

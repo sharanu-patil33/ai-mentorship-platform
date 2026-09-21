@@ -12,22 +12,43 @@ app.use(express.json());
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
-// Create a student and start their interview
+// Create a student and start their interview (also supports an already-logged-in student)
 app.post("/api/interview/start", async (req, res) => {
   try {
-    const { name, email, knownTopics } = req.body;
+    const { name, email, knownTopics, studentId } = req.body;
 
-    if (!name || !email || !Array.isArray(knownTopics) || knownTopics.length === 0) {
-      return res.status(400).json({ error: "name, email, and knownTopics (non-empty array) are required" });
+    if (!Array.isArray(knownTopics) || knownTopics.length === 0) {
+      return res.status(400).json({ error: "knownTopics (non-empty array) is required" });
     }
 
-    const { data: student, error } = await supabase
-      .from("students")
-      .insert({ name, email, known_topics: knownTopics })
-      .select()
-      .single();
+    let student;
 
-    if (error) throw error;
+    if (studentId) {
+      // Logged-in student — update their known_topics and reuse the existing record
+      const { data: updated, error } = await supabase
+        .from("students")
+        .update({ known_topics: knownTopics })
+        .eq("id", studentId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      student = updated;
+    } else {
+      // Legacy path — no login, create a fresh student record
+      if (!name || !email) {
+        return res.status(400).json({ error: "name and email are required when not logged in" });
+      }
+
+      const { data: created, error } = await supabase
+        .from("students")
+        .insert({ name, email, known_topics: knownTopics })
+        .select()
+        .single();
+
+      if (error) throw error;
+      student = created;
+    }
 
     const { state, question } = await startInterview(student.id, knownTopics);
 
@@ -390,6 +411,82 @@ app.get("/api/student/:studentId/dashboard", async (req, res) => {
     );
 
     res.json({ student: { name: student.name, email: student.email }, programs: programsWithProgress });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Auth: ensure a students row exists for this authenticated user, return their studentId
+app.post("/api/auth/sync-student", async (req, res) => {
+  try {
+    const { authUserId, email, name } = req.body;
+
+    if (!authUserId || !email) {
+      return res.status(400).json({ error: "authUserId and email are required" });
+    }
+
+    // Check if a student row already exists for this auth user OR this email
+    const { data: existing, error: existingError } = await supabase
+      .from("students")
+      .select("*")
+      .or(`auth_user_id.eq.${authUserId},email.eq.${email}`)
+      .maybeSingle();
+
+    if (existingError) throw existingError;
+
+    if (existing) {
+      // If found by email but auth_user_id not yet linked, link it now
+      if (!existing.auth_user_id) {
+        await supabase
+          .from("students")
+          .update({ auth_user_id: authUserId })
+          .eq("id", existing.id);
+      }
+      return res.json({ student: existing, isNew: false });
+    }
+
+    // Create a new student row linked to this auth user
+    const { data: newStudent, error: insertError } = await supabase
+      .from("students")
+      .insert({
+        auth_user_id: authUserId,
+        email,
+        name: name || email.split("@")[0],
+        known_topics: [],
+      })
+      .select()
+      .single();
+
+    if (insertError) throw insertError;
+
+    res.json({ student: newStudent, isNew: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Check if a student has a completed interview session
+app.get("/api/student/:studentId/interview-status", async (req, res) => {
+  try {
+    const { studentId } = req.params;
+
+    const { data: session, error } = await supabase
+      .from("interview_sessions")
+      .select("id, status")
+      .eq("student_id", studentId)
+      .eq("status", "completed")
+      .order("started_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    res.json({
+      hasCompletedInterview: !!session,
+      sessionId: session ? session.id : null,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });

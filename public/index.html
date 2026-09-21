@@ -189,17 +189,20 @@
 <div class="app">
   <header>
     <span>AI Interview</span>
-    <label id="voiceToggleLabel">
-      <input type="checkbox" id="voiceToggle" checked />
-      Voice
-    </label>
+    <div style="display:flex; align-items:center; gap:14px;">
+      <a href="dashboard.html" style="font-size:13px; color:#555; text-decoration:none;">My Progress</a>
+      <label id="voiceToggleLabel">
+        <input type="checkbox" id="voiceToggle" checked />
+        Voice
+      </label>
+    </div>
   </header>
 
   <div id="setup">
-    <input id="nameInput" placeholder="Your name" />
-    <input id="emailInput" placeholder="Your email" />
+    <div id="welcomeMsg" style="font-size:14px; color:#555;"></div>
     <input id="topicsInput" placeholder="Topics you know (comma separated, e.g. React, Node.js)" />
     <button onclick="startInterview()">Start Interview</button>
+    <button onclick="logout()" style="background:#eee; color:#555;">Log Out</button>
   </div>
 
   <div id="chat">
@@ -221,6 +224,25 @@
   let sessionId = null;
   let currentQuestion = null;
   let studentId = null;
+  let studentName = null;
+
+  // Require login — redirect if no session found
+  studentId = localStorage.getItem("studentId");
+  studentName = localStorage.getItem("studentName");
+
+  if (!studentId) {
+    localStorage.removeItem("studentId");
+    localStorage.removeItem("studentName");
+    window.location.href = "auth.html";
+  } else {
+    document.getElementById("welcomeMsg").textContent = `Welcome back, ${studentName || "there"}!`;
+  }
+
+  function logout() {
+    localStorage.removeItem("studentId");
+    localStorage.removeItem("studentName");
+    window.location.href = "auth.html";
+  }
 
   // ---------- Voice setup ----------
   const voiceToggle = document.getElementById("voiceToggle");
@@ -338,12 +360,10 @@
   }
 
   async function startInterview() {
-    const name = document.getElementById("nameInput").value.trim();
-    const email = document.getElementById("emailInput").value.trim();
     const topicsRaw = document.getElementById("topicsInput").value.trim();
 
-    if (!name || !email || !topicsRaw) {
-      alert("Please fill in all fields");
+    if (!topicsRaw) {
+      alert("Please enter at least one topic you know");
       return;
     }
 
@@ -356,7 +376,7 @@
     const res = await fetch(`${API_BASE}/interview/start`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, knownTopics }),
+      body: JSON.stringify({ studentId, knownTopics }),
     });
     const data = await res.json();
     showLoading(false);
@@ -367,7 +387,6 @@
     }
 
     sessionId = data.sessionId;
-    studentId = data.studentId;
     currentQuestion = data.question;
     addMessage(data.question, "ai", data.topic);
     speak(data.question);

@@ -117,6 +117,11 @@
   const sessionId = params.get("sessionId");
   const studentId = params.get("studentId");
 
+  // Require login — if there's no logged-in session at all, send them to auth.html
+  if (!localStorage.getItem("studentId")) {
+    window.location.href = "auth.html";
+  }
+
   let programsData = [];
   let selectedIds = new Set();
 
