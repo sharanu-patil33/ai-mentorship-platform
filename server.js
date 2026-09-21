@@ -426,16 +426,23 @@ app.post("/api/auth/sync-student", async (req, res) => {
       return res.status(400).json({ error: "authUserId and email are required" });
     }
 
-    // Check if a student row already exists for this auth user
+    // Check if a student row already exists for this auth user OR this email
     const { data: existing, error: existingError } = await supabase
       .from("students")
       .select("*")
-      .eq("auth_user_id", authUserId)
+      .or(`auth_user_id.eq.${authUserId},email.eq.${email}`)
       .maybeSingle();
 
     if (existingError) throw existingError;
 
     if (existing) {
+      // If found by email but auth_user_id not yet linked, link it now
+      if (!existing.auth_user_id) {
+        await supabase
+          .from("students")
+          .update({ auth_user_id: authUserId })
+          .eq("id", existing.id);
+      }
       return res.json({ student: existing, isNew: false });
     }
 
@@ -454,6 +461,32 @@ app.post("/api/auth/sync-student", async (req, res) => {
     if (insertError) throw insertError;
 
     res.json({ student: newStudent, isNew: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Check if a student has a completed interview session
+app.get("/api/student/:studentId/interview-status", async (req, res) => {
+  try {
+    const { studentId } = req.params;
+
+    const { data: session, error } = await supabase
+      .from("interview_sessions")
+      .select("id, status")
+      .eq("student_id", studentId)
+      .eq("status", "completed")
+      .order("started_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    res.json({
+      hasCompletedInterview: !!session,
+      sessionId: session ? session.id : null,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });

@@ -191,16 +191,21 @@
 
     localStorage.setItem("studentId", data.student.id);
     localStorage.setItem("studentName", data.student.name);
-    window.location.href = "index.html";
+    window.location.href = "student-dashboard.html";
   }
 
-  // If already logged in, skip straight to the app
-  (async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session) {
-      await syncStudent(session.user);
-    }
-  })();
+  // Only auto-skip login if the user was redirected here (not if they opened auth.html directly)
+  // We check this by looking at the document.referrer — if empty, they typed/opened the URL directly
+  const cameFromApp = document.referrer && document.referrer.includes(window.location.hostname);
+
+  if (cameFromApp) {
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        await syncStudent(session.user);
+      }
+    })();
+  }
 </script>
 
 </body>

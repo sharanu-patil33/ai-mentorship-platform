@@ -189,10 +189,13 @@
 <div class="app">
   <header>
     <span>AI Interview</span>
-    <label id="voiceToggleLabel">
-      <input type="checkbox" id="voiceToggle" checked />
-      Voice
-    </label>
+    <div style="display:flex; align-items:center; gap:14px;">
+      <a href="dashboard.html" style="font-size:13px; color:#555; text-decoration:none;">My Progress</a>
+      <label id="voiceToggleLabel">
+        <input type="checkbox" id="voiceToggle" checked />
+        Voice
+      </label>
+    </div>
   </header>
 
   <div id="setup">
@@ -228,6 +231,8 @@
   studentName = localStorage.getItem("studentName");
 
   if (!studentId) {
+    localStorage.removeItem("studentId");
+    localStorage.removeItem("studentName");
     window.location.href = "auth.html";
   } else {
     document.getElementById("welcomeMsg").textContent = `Welcome back, ${studentName || "there"}!`;
