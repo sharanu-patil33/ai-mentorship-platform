@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mentor Dashboard</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f5f7; min-height: 100vh; }
+  header {
+    background: #1a1a2e;
+    color: #fff;
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  header h1 { font-size: 18px; }
+  .user-info { font-size: 13px; color: #ccc; display: flex; align-items: center; gap: 14px; }
+  .logout-btn {
+    background: transparent;
+    border: 1px solid #555;
+    color: #ccc;
+    padding: 5px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  .container { max-width: 960px; margin: 0 auto; padding: 28px 20px; }
+  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 28px; }
+  .stat-card { background: #fff; border-radius: 10px; padding: 18px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+  .stat-card .num { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+  .stat-card .label { font-size: 13px; color: #888; }
+  h2 { font-size: 16px; margin-bottom: 14px; }
+  .student-card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color 0.15s;
+    text-decoration: none;
+    color: inherit;
+  }
+  .student-card:hover { border-color: #1a1a2e; }
+  .student-info h3 { font-size: 15px; margin-bottom: 2px; }
+  .student-info p { font-size: 13px; color: #888; }
+  .student-meta { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pill {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 10px;
+  }
+  .pill.done { background: #d3f9d8; color: #2b8a3e; }
+  .pill.pending { background: #fff3bf; color: #e67700; }
+  .pill.none { background: #f1f3f5; color: #868e96; }
+  .view-btn {
+    padding: 7px 14px;
+    background: #1a1a2e;
+    color: #fff;
+    border: none;
+    border-radius: 7px;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+    text-decoration: none;
+  }
+  .empty { color: #aaa; font-size: 14px; padding: 20px 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎓 Mentor Portal</h1>
+  <div class="user-info">
+    <span id="mentorName">Loading...</span>
+    <button class="logout-btn" onclick="logout()">Log Out</button>
+  </div>
+</header>
+
+<div class="container">
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="num" id="totalStudents">—</div>
+      <div class="label">Total Students</div>
+    </div>
+    <div class="stat-card">
+      <div class="num" id="interviewedStudents">—</div>
+      <div class="label">Completed Interview</div>
+    </div>
+    <div class="stat-card">
+      <div class="num" id="enrolledStudents">—</div>
+      <div class="label">Enrolled in Programs</div>
+    </div>
+  </div>
+
+  <h2>All Students</h2>
+  <div id="studentList"><p class="empty">Loading students...</p></div>
+</div>
+
+<script>
+  const API_BASE = "http://localhost:3000/api";
+
+  const mentorId = localStorage.getItem("mentorId");
+  const mentorName = localStorage.getItem("mentorName");
+
+  if (!mentorId) {
+    window.location.href = "mentor-auth.html";
+  }
+
+  document.getElementById("mentorName").textContent = mentorName || "Mentor";
+
+  function logout() {
+    localStorage.removeItem("mentorId");
+    localStorage.removeItem("mentorName");
+    window.location.href = "mentor-auth.html";
+  }
+
+  async function loadStudents() {
+    const res = await fetch(`${API_BASE}/mentor/students`);
+    const data = await res.json();
+
+    if (data.error) {
+      document.getElementById("studentList").innerHTML = `<p class="empty">${data.error}</p>`;
+      return;
+    }
+
+    const students = data.students;
+    const interviewed = students.filter(s => s.hasInterview).length;
+    const enrolled = students.filter(s => s.programs.length > 0).length;
+
+    document.getElementById("totalStudents").textContent = students.length;
+    document.getElementById("interviewedStudents").textContent = interviewed;
+    document.getElementById("enrolledStudents").textContent = enrolled;
+
+    if (!students.length) {
+      document.getElementById("studentList").innerHTML = `<p class="empty">No students registered yet.</p>`;
+      return;
+    }
+
+    document.getElementById("studentList").innerHTML = students.map(s => `
+      <div class="student-card" onclick="window.location.href='mentor.html?email=${encodeURIComponent(s.email)}'">
+        <div class="student-info">
+          <h3>${s.name}</h3>
+          <p>${s.email}</p>
+          <p style="font-size:12px; color:#aaa; margin-top:4px;">
+            Topics: ${(s.known_topics || []).join(", ") || "Not set"}
+          </p>
+        </div>
+        <div class="student-meta">
+          <span class="pill ${s.hasInterview ? 'done' : 'none'}">
+            ${s.hasInterview ? '✓ Interviewed' : 'No Interview'}
+          </span>
+          <span class="pill ${s.programs.length > 0 ? 'done' : 'none'}">
+            ${s.programs.length > 0
+              ? s.programs.map(p => p.programs?.name).join(", ")
+              : 'No Programs'}
+          </span>
+        </div>
+        <a class="view-btn" href="mentor.html?email=${encodeURIComponent(s.email)}">
+          View Progress →
+        </a>
+      </div>
+    `).join("");
+  }
+
+  loadStudents();
+</script>
+
+</body>
+</html>

@@ -102,7 +102,10 @@
 <body>
 
 <div class="app">
-  <h1>Mentor Dashboard</h1>
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+    <h1 style="margin:0;">Student Progress</h1>
+    <a href="mentor-dashboard.html" style="font-size:13px; color:#555; text-decoration:none;">← Back to Dashboard</a>
+  </div>
   <div id="searchRow">
     <input id="emailInput" placeholder="Student email" />
     <button onclick="searchStudent()">Search</button>
@@ -112,6 +115,18 @@
 
 <script>
   const API_BASE = "http://localhost:3000/api";
+
+  // Require mentor login
+  if (!localStorage.getItem("mentorId")) {
+    window.location.href = "mentor-auth.html";
+  }
+
+  // Auto-load if email passed via URL param (from mentor-dashboard.html)
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("email")) {
+    document.getElementById("emailInput").value = params.get("email");
+    searchStudent();
+  }
 
   async function searchStudent() {
     const email = document.getElementById("emailInput").value.trim();

@@ -493,5 +493,132 @@ app.get("/api/student/:studentId/interview-status", async (req, res) => {
   }
 });
 
+// Mentor auth: sync mentor login with mentors table
+app.post("/api/auth/sync-mentor", async (req, res) => {
+  try {
+    const { authUserId, email } = req.body;
+    if (!authUserId || !email) return res.status(400).json({ error: "authUserId and email required" });
+
+    const { data: mentor, error } = await supabase
+      .from("mentors")
+      .select("*")
+      .eq("auth_user_id", authUserId)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!mentor) return res.status(403).json({ error: "No mentor account found for this email. Contact your admin." });
+
+    res.json({ mentor });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Mentor: get all students with their program + concept progress
+app.get("/api/mentor/students", async (req, res) => {
+  try {
+    const { data: students, error } = await supabase
+      .from("students")
+      .select("id, name, email, known_topics, created_at")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    const studentsWithProgress = await Promise.all(
+      students.map(async (s) => {
+        const { data: programs } = await supabase
+          .from("student_programs")
+          .select("id, status, source, programs(name)")
+          .eq("student_id", s.id);
+
+        const { data: session } = await supabase
+          .from("interview_sessions")
+          .select("id, status")
+          .eq("student_id", s.id)
+          .eq("status", "completed")
+          .maybeSingle();
+
+        return {
+          ...s,
+          hasInterview: !!session,
+          programs: programs || [],
+        };
+      })
+    );
+
+    res.json({ students: studentsWithProgress });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Mentor: sync auth user with mentors table
+app.post("/api/auth/sync-mentor", async (req, res) => {
+  try {
+    const { authUserId, email } = req.body;
+    if (!authUserId || !email) {
+      return res.status(400).json({ error: "authUserId and email are required" });
+    }
+
+    const { data: mentor, error } = await supabase
+      .from("mentors")
+      .select("*")
+      .eq("auth_user_id", authUserId)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    if (!mentor) {
+      return res.status(403).json({ error: "No mentor account found for this email. Contact admin." });
+    }
+
+    res.json({ mentor });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Mentor: get all students with their programs and concept progress
+app.get("/api/mentor/students", async (req, res) => {
+  try {
+    const { data: students, error } = await supabase
+      .from("students")
+      .select("id, name, email, known_topics, created_at")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    const studentsWithProgress = await Promise.all(
+      students.map(async (student) => {
+        const { data: programs } = await supabase
+          .from("student_programs")
+          .select("id, status, source, programs(name)")
+          .eq("student_id", student.id);
+
+        const { data: session } = await supabase
+          .from("interview_sessions")
+          .select("id, status")
+          .eq("student_id", student.id)
+          .eq("status", "completed")
+          .maybeSingle();
+
+        return {
+          ...student,
+          hasInterview: !!session,
+          programs: programs || [],
+        };
+      })
+    );
+
+    res.json({ students: studentsWithProgress });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
