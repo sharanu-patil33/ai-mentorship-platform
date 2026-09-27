@@ -5,13 +5,18 @@ import { createClient } from "@supabase/supabase-js";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
-
-const MAX_QUESTIONS_PER_TOPIC = 4;
-const MAX_TOTAL_QUESTIONS = 15;
 const MODEL = "openai/gpt-oss-120b";
 
-// 1. Start a session: seed topics from student's known_topics
-export async function startInterview(studentId, knownTopics) {
+const PHASE_LIMITS = {
+  introduction: 3,
+  projects: 4,
+  hobbies: 2,
+  technical: 4, // per topic
+};
+const MAX_TECHNICAL_TOTAL = 12;
+
+// ─── 1. Start interview ───────────────────────────────────────────────────────
+export async function startInterview(studentId, knownTopics = []) {
   const { data: session, error } = await supabase
     .from("interview_sessions")
     .insert({ student_id: studentId, status: "in_progress", mode: "mixed" })
@@ -20,30 +25,69 @@ export async function startInterview(studentId, knownTopics) {
 
   if (error) throw error;
 
+  // If no topics provided, we'll extract them from the conversation during the technical phase
+  const topicList = knownTopics.length > 0
+    ? knownTopics
+    : ["General Programming"]; // fallback until we extract from conversation
+
   const state = {
     sessionId: session.id,
-    topics: knownTopics.map((t) => ({ name: t, questionsAsked: 0, scores: [] })),
+    phase: "introduction",
+    phaseQuestions: 0,
+    topics: topicList.map(t => ({ name: t, questionsAsked: 0, scores: [] })),
     currentTopicIndex: 0,
     totalQuestions: 0,
   };
 
-  const firstQuestion = await generateQuestion(state, null);
-  return { state, question: firstQuestion };
+  const question = await generatePhaseQuestion(state, null);
+  return { state, question };
 }
 
-// 2. Generate next question — either opener or follow-up based on last answer
-export async function generateQuestion(state, lastAnswer) {
-  const currentTopic = state.topics[state.currentTopicIndex];
+// ─── 2. Generate question based on current phase ──────────────────────────────
+export async function generatePhaseQuestion(state, lastAnswer) {
+  let systemPrompt = "";
+  let userPrompt = "";
 
-  const systemPrompt = `You are a technical interviewer assessing a student's real understanding of "${currentTopic.name}".
-Ask ONE clear, specific question. If given the student's previous answer, decide whether to:
-- go deeper into the same sub-topic (if the answer was strong), or
-- ask a simpler clarifying question (if the answer was weak/vague).
+  if (state.phase === "introduction") {
+    systemPrompt = `You are a friendly interviewer doing a student onboarding.
+Ask ONE warm, open-ended question to learn about the student's background, education, what they have studied, or what they are currently working on.
 Respond ONLY with the question text, no preamble.`;
+    userPrompt = lastAnswer
+      ? `Student's previous answer: "${lastAnswer}"\nAsk a natural follow-up introduction question.`
+      : `Ask an opening introduction question like "Tell me about yourself".`;
 
-  const userPrompt = lastAnswer
-    ? `Previous answer from student: "${lastAnswer}"\nAsk the next question.`
-    : `This is the first question on this topic. Ask an opening question.`;
+  } else if (state.phase === "projects") {
+    systemPrompt = `You are a friendly interviewer learning about a student's past work.
+Ask ONE specific question about their past projects — what they built, the tech stack they used, their role, or challenges they faced.
+Respond ONLY with the question text, no preamble.`;
+    userPrompt = lastAnswer
+      ? `Student's previous answer: "${lastAnswer}"\nAsk a follow-up question about their projects or technical work.`
+      : `Ask an opening question like "Tell me about a project you've worked on".`;
+
+  } else if (state.phase === "hobbies") {
+    systemPrompt = `You are a friendly interviewer learning about a student as a person.
+Ask ONE warm question about their hobbies, interests outside tech, what motivates them, or their soft skills.
+Respond ONLY with the question text, no preamble.`;
+    userPrompt = lastAnswer
+      ? `Student's previous answer: "${lastAnswer}"\nAsk a follow-up about their hobbies or interests.`
+      : `Ask an opening question like "What do you enjoy doing outside of tech?".`;
+
+  } else {
+    // technical phase — if no topics seeded, use what student mentioned in projects
+    let currentTopic = state.topics[state.currentTopicIndex];
+    if (!currentTopic) {
+      // fallback: ask general CS questions
+      currentTopic = { name: "General Programming" };
+    }
+    systemPrompt = `You are a technical interviewer assessing a student's understanding of "${currentTopic.name}".
+Ask ONE clear, specific technical question. Based on the student's previous answer, decide whether to:
+- go deeper into the same concept (if their answer was strong)
+- ask a simpler clarifying question (if their answer was weak or vague)
+Respond ONLY with the question text, no preamble.`;
+    userPrompt = lastAnswer
+      ? `Previous answer: "${lastAnswer}"\nAsk the next technical question on ${currentTopic.name}.`
+      : `Ask an opening technical question on ${currentTopic.name}.`;
+  }
 
   const completion = await groq.chat.completions.create({
     model: MODEL,
@@ -57,9 +101,9 @@ Respond ONLY with the question text, no preamble.`;
   return completion.choices[0].message.content.trim();
 }
 
-// 3. Score an answer (depth + notes) — called right after student responds
+// ─── 3. Score a technical answer ──────────────────────────────────────────────
 async function scoreAnswer(topic, question, answer) {
-  const systemPrompt = `You evaluate a student's interview answer on "${topic}".
+  const systemPrompt = `You evaluate a student's technical answer on "${topic}".
 Respond ONLY in JSON, no markdown fences: {"depth": "basic"|"intermediate"|"advanced", "notes": "one short sentence"}`;
 
   const completion = await groq.chat.completions.create({
@@ -72,7 +116,6 @@ Respond ONLY in JSON, no markdown fences: {"depth": "basic"|"intermediate"|"adva
   });
 
   const raw = completion.choices[0].message.content.trim().replace(/```json|```/g, "");
-
   try {
     return JSON.parse(raw);
   } catch {
@@ -80,16 +123,20 @@ Respond ONLY in JSON, no markdown fences: {"depth": "basic"|"intermediate"|"adva
   }
 }
 
-// 4. Main turn handler: called every time the student answers
+// ─── 4. Handle each answer turn ──────────────────────────────────────────────
 export async function handleAnswer(state, question, answer) {
-  const currentTopic = state.topics[state.currentTopicIndex];
+  const isTechnical = state.phase === "technical";
+  const currentTopic = isTechnical ? state.topics[state.currentTopicIndex] : null;
 
-  const evaluation = await scoreAnswer(currentTopic.name, question, answer);
+  // Score technical answers; non-technical just log as-is
+  const evaluation = isTechnical
+    ? await scoreAnswer(currentTopic.name, question, answer)
+    : { depth: null, notes: null };
 
-  // Log this turn to Supabase
-  const { error: insertError } = await supabase.from("interview_qa").insert({
+  // Log this turn
+  await supabase.from("interview_qa").insert({
     session_id: state.sessionId,
-    topic: currentTopic.name,
+    topic: isTechnical ? currentTopic.name : state.phase,
     question,
     answer,
     depth_score: evaluation.depth,
@@ -97,31 +144,58 @@ export async function handleAnswer(state, question, answer) {
     turn_number: state.totalQuestions + 1,
   });
 
-  if (insertError) throw insertError;
+  if (isTechnical) {
+    currentTopic.questionsAsked += 1;
+    currentTopic.scores.push(evaluation.depth);
+  }
 
-  currentTopic.questionsAsked += 1;
-  currentTopic.scores.push(evaluation.depth);
+  state.phaseQuestions += 1;
   state.totalQuestions += 1;
 
-  // Decide: stop entirely, switch topic, or continue same topic
-  if (state.totalQuestions >= MAX_TOTAL_QUESTIONS) {
-    return { done: true };
+  // ── Decide what's next ──
+  const limit = isTechnical ? PHASE_LIMITS.technical : PHASE_LIMITS[state.phase];
+
+  if (state.phaseQuestions >= limit) {
+    // Advance phase or topic
+    if (state.phase === "introduction") {
+      state.phase = "projects";
+      state.phaseQuestions = 0;
+    } else if (state.phase === "projects") {
+      state.phase = "hobbies";
+      state.phaseQuestions = 0;
+    } else if (state.phase === "hobbies") {
+      state.phase = "technical";
+      state.phaseQuestions = 0;
+    } else if (state.phase === "technical") {
+      // Move to next topic
+      state.currentTopicIndex += 1;
+      state.phaseQuestions = 0;
+
+      // Check if all topics done or max reached
+      const techTotal = state.topics.reduce((sum, t) => sum + t.questionsAsked, 0);
+      if (state.currentTopicIndex >= state.topics.length || techTotal >= MAX_TECHNICAL_TOTAL) {
+        return { done: true };
+      }
+    }
   }
 
-  if (currentTopic.questionsAsked >= MAX_QUESTIONS_PER_TOPIC) {
-    state.currentTopicIndex += 1;
-    if (state.currentTopicIndex >= state.topics.length) {
+  // Check global max
+  if (state.phase === "technical") {
+    const techTotal = state.topics.reduce((sum, t) => sum + t.questionsAsked, 0);
+    if (techTotal >= MAX_TECHNICAL_TOTAL) {
       return { done: true };
     }
-    const nextQuestion = await generateQuestion(state, null); // fresh topic, no lastAnswer
-    return { done: false, question: nextQuestion, topic: state.topics[state.currentTopicIndex].name };
   }
 
-  const nextQuestion = await generateQuestion(state, answer);
-  return { done: false, question: nextQuestion, topic: currentTopic.name };
+  const nextQuestion = await generatePhaseQuestion(state, answer);
+  const topicLabel = state.phase === "technical"
+    ? state.topics[state.currentTopicIndex]?.name || "Technical"
+    : state.phase.charAt(0).toUpperCase() + state.phase.slice(1);
+
+  return { done: false, question: nextQuestion, topic: topicLabel };
 }
 
-// 5. Final summary generation — called when done: true
+// ─── 5. Generate final summary ───────────────────────────────────────────────
 export async function generateSummary(state) {
   const { data: qaLog, error: qaError } = await supabase
     .from("interview_qa")
@@ -131,66 +205,120 @@ export async function generateSummary(state) {
 
   if (qaError) throw qaError;
 
-  const transcript = qaLog
-    .map((q) => `[${q.topic}] Q: ${q.question}\nA: ${q.answer}\nDepth: ${q.depth_score}`)
-    .join("\n\n");
+  const introQAs   = qaLog.filter(q => q.topic === "introduction");
+  const projectQAs = qaLog.filter(q => q.topic === "projects");
+  const hobbyQAs   = qaLog.filter(q => q.topic === "hobbies");
+  const techQAs    = qaLog.filter(q => !["introduction","projects","hobbies"].includes(q.topic));
 
-  const systemPrompt = `Summarize this technical interview transcript.
-Respond ONLY in JSON, no markdown fences:
-{
-  "topic_scores": {"TopicName": "basic|intermediate|advanced"},
-  "strengths": ["..."],
-  "weaknesses": ["..."],
-  "overall_summary": "2-3 sentence paragraph"
-}`;
+  const format = (arr) => arr.map(q => `Q: ${q.question}\nA: ${q.answer}`).join("\n\n");
 
-  const completion = await groq.chat.completions.create({
+  // Introduction summary
+  const introSummaryRes = await groq.chat.completions.create({
     model: MODEL,
     messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: transcript },
+      { role: "system", content: `Summarize this student's introduction in 2-3 sentences. Respond ONLY with the summary text.` },
+      { role: "user", content: format(introQAs) },
+    ],
+    temperature: 0.4,
+  });
+  const introduction = introSummaryRes.choices[0].message.content.trim();
+
+  // Projects summary
+  const projectSummaryRes = await groq.chat.completions.create({
+    model: MODEL,
+    messages: [
+      { role: "system", content: `Extract the student's past projects from this conversation.
+Respond ONLY in JSON array, no markdown fences: [{"name": "project name", "tech": ["tech1","tech2"], "description": "one sentence", "role": "their role"}]` },
+      { role: "user", content: format(projectQAs) },
+    ],
+    temperature: 0.3,
+  });
+  let past_projects = [];
+  try {
+    const raw = projectSummaryRes.choices[0].message.content.trim().replace(/```json|```/g, "");
+    past_projects = JSON.parse(raw);
+  } catch { past_projects = []; }
+
+  // Hobbies summary
+  const hobbySummaryRes = await groq.chat.completions.create({
+    model: MODEL,
+    messages: [
+      { role: "system", content: `Summarize this student's hobbies and interests in one sentence. Also extract 3-5 soft skills as a JSON object.
+Respond ONLY in JSON, no markdown fences: {"hobbies": "one sentence", "soft_skills": ["skill1","skill2"]}` },
+      { role: "user", content: format(hobbyQAs) },
+    ],
+    temperature: 0.3,
+  });
+  let hobbies = "", soft_skills = [];
+  try {
+    const raw = hobbySummaryRes.choices[0].message.content.trim().replace(/```json|```/g, "");
+    const parsed = JSON.parse(raw);
+    hobbies = parsed.hobbies || "";
+    soft_skills = parsed.soft_skills || [];
+  } catch {}
+
+  // Technical summary
+  const techTranscript = techQAs.map(q => `[${q.topic}] Q: ${q.question}\nA: ${q.answer}\nDepth: ${q.depth_score}`).join("\n\n");
+
+  const techSummaryRes = await groq.chat.completions.create({
+    model: MODEL,
+    messages: [
+      { role: "system", content: `Summarize this technical interview transcript.
+Respond ONLY in JSON, no markdown fences:
+{"topic_scores": {"TopicName": "basic|intermediate|advanced"}, "strengths": ["..."], "weaknesses": ["..."], "overall_summary": "2-3 sentence paragraph"}` },
+      { role: "user", content: techTranscript || "No technical questions were answered." },
     ],
     temperature: 0.4,
   });
 
-  const raw = completion.choices[0].message.content.trim().replace(/```json|```/g, "");
-  const summary = JSON.parse(raw);
+  let techSummary = { topic_scores: {}, strengths: [], weaknesses: [], overall_summary: "" };
+  try {
+    const raw = techSummaryRes.choices[0].message.content.trim().replace(/```json|```/g, "");
+    techSummary = JSON.parse(raw);
+  } catch {}
 
-  const { data: sessionRow, error: sessionError } = await supabase
+  // Save to DB
+  const { data: sessionRow } = await supabase
     .from("interview_sessions")
     .select("student_id")
     .eq("id", state.sessionId)
     .single();
 
-  if (sessionError) throw sessionError;
-
-  const { error: summaryError } = await supabase.from("interview_summary").insert({
+  await supabase.from("interview_summary").insert({
     session_id: state.sessionId,
     student_id: sessionRow.student_id,
-    topic_scores: summary.topic_scores,
-    strengths: summary.strengths,
-    weaknesses: summary.weaknesses,
-    overall_summary: summary.overall_summary,
+    introduction,
+    past_projects,
+    hobbies,
+    soft_skills,
+    topic_scores: techSummary.topic_scores,
+    strengths: techSummary.strengths,
+    weaknesses: techSummary.weaknesses,
+    overall_summary: techSummary.overall_summary,
   });
-
-  if (summaryError) throw summaryError;
 
   await supabase
     .from("interview_sessions")
     .update({ status: "completed", ended_at: new Date() })
     .eq("id", state.sessionId);
 
-  return summary;
+  return {
+    introduction,
+    past_projects,
+    hobbies,
+    soft_skills,
+    ...techSummary,
+  };
 }
 
-// 6. Recommend 2 of 4 programs based on the interview summary
+// ─── 6. Recommend programs ───────────────────────────────────────────────────
 export async function recommendPrograms(summary) {
   const { data: allPrograms, error } = await supabase.from("programs").select("*");
   if (error) throw error;
 
   const systemPrompt = `You are an academic advisor. Based on a student's interview summary,
-recommend exactly 2 of these 4 programs that best fit their current skill level and gaps.
-Programs available: ${allPrograms.map((p) => p.name).join(", ")}.
+recommend exactly 2 of these 4 programs that best fit their skill level, past projects and interests.
+Programs available: ${allPrograms.map(p => p.name).join(", ")}.
 Respond ONLY in JSON, no markdown fences: {"recommended": ["Program Name 1", "Program Name 2"], "reasoning": "one sentence why"}`;
 
   const completion = await groq.chat.completions.create({

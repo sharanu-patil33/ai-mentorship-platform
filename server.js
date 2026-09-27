@@ -3,7 +3,7 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { createClient } from "@supabase/supabase-js";
-import { startInterview, handleAnswer, generateSummary, generateQuestion, recommendPrograms } from "./interview/interviewEngine.js";
+import { startInterview, handleAnswer, generateSummary, generatePhaseQuestion, recommendPrograms } from "./interview/interviewEngine.js";
 import { rebuildState } from "./interview/stateManager.js";
 
 const app = express();
@@ -17,8 +17,8 @@ app.post("/api/interview/start", async (req, res) => {
   try {
     const { name, email, knownTopics, studentId } = req.body;
 
-    if (!Array.isArray(knownTopics) || knownTopics.length === 0) {
-      return res.status(400).json({ error: "knownTopics (non-empty array) is required" });
+    if (!Array.isArray(knownTopics)) {
+      return res.status(400).json({ error: "knownTopics must be an array" });
     }
 
     let student;
@@ -55,7 +55,7 @@ app.post("/api/interview/start", async (req, res) => {
     res.json({
       studentId: student.id,
       sessionId: state.sessionId,
-      topic: state.topics[state.currentTopicIndex].name,
+      topic: state.phase || "introduction",
       question,
     });
   } catch (err) {

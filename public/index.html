@@ -199,9 +199,9 @@
   </header>
 
   <div id="setup">
-    <div id="welcomeMsg" style="font-size:14px; color:#555;"></div>
-    <input id="topicsInput" placeholder="Topics you know (comma separated, e.g. React, Node.js)" />
-    <button onclick="startInterview()">Start Interview</button>
+    <div id="welcomeMsg" style="font-size:14px; color:#555; margin-bottom:4px;"></div>
+    <p style="font-size:13px; color:#888; margin:0;">Click below to begin your AI interview. The interviewer will guide you through introduction, past projects, hobbies, and technical questions.</p>
+    <button onclick="startInterview()">Start Interview →</button>
     <button onclick="logout()" style="background:#eee; color:#555;">Log Out</button>
   </div>
 
@@ -360,15 +360,6 @@
   }
 
   async function startInterview() {
-    const topicsRaw = document.getElementById("topicsInput").value.trim();
-
-    if (!topicsRaw) {
-      alert("Please enter at least one topic you know");
-      return;
-    }
-
-    const knownTopics = topicsRaw.split(",").map(t => t.trim()).filter(Boolean);
-
     document.getElementById("setup").style.display = "none";
     document.getElementById("chat").style.display = "flex";
     showLoading(true);
@@ -376,7 +367,7 @@
     const res = await fetch(`${API_BASE}/interview/start`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ studentId, knownTopics }),
+      body: JSON.stringify({ studentId, knownTopics: [] }),
     });
     const data = await res.json();
     showLoading(false);
