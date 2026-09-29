@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>My Resume</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #f5f5f7;
+    min-height: 100vh;
+  }
+  header {
+    background: #111;
+    color: #fff;
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  header h1 { font-size: 18px; }
+  header a { color: #ccc; font-size: 13px; text-decoration: none; }
+  .container { max-width: 640px; margin: 0 auto; padding: 40px 20px; }
+  .card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 32px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    text-align: center;
+  }
+  .icon { font-size: 48px; margin-bottom: 16px; }
+  h2 { font-size: 22px; margin-bottom: 8px; }
+  .subtitle { font-size: 14px; color: #666; margin-bottom: 28px; line-height: 1.5; }
+  .btn {
+    display: inline-block;
+    padding: 13px 28px;
+    background: #111;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    cursor: pointer;
+    text-decoration: none;
+    margin: 6px;
+  }
+  .btn:disabled { background: #ccc; cursor: not-allowed; }
+  .btn.secondary { background: #eee; color: #333; }
+  .status-box {
+    background: #f5f5f7;
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 24px;
+    text-align: left;
+    font-size: 13px;
+  }
+  .status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+  }
+  .status-row:last-child { border-bottom: none; }
+  .status-label { color: #555; }
+  .badge {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 10px;
+  }
+  .badge.done { background: #d3f9d8; color: #2b8a3e; }
+  .badge.pending { background: #fff3bf; color: #e67700; }
+  .badge.missing { background: #ffe3e3; color: #c92a2a; }
+  .generated-box {
+    background: #f0fff4;
+    border: 1px solid #d3f9d8;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  .generated-box p { font-size: 13px; color: #2b8a3e; margin-bottom: 12px; }
+  .loading { color: #888; font-size: 14px; margin: 16px 0; }
+  .error { color: #c92a2a; font-size: 14px; margin: 12px 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📄 My Resume</h1>
+  <a href="student-dashboard.html">← Back to Dashboard</a>
+</header>
+
+<div class="container">
+  <div class="card">
+    <div class="icon">📄</div>
+    <h2>AI-Generated Resume</h2>
+    <p class="subtitle">Your resume is automatically built from your interview responses, past projects, and program completions.</p>
+
+    <div class="status-box" id="statusBox">
+      <div class="status-row">
+        <span class="status-label">AI Interview</span>
+        <span class="badge pending" id="interviewBadge">Checking...</span>
+      </div>
+      <div class="status-row">
+        <span class="status-label">Project 1</span>
+        <span class="badge pending" id="project1Badge">Checking...</span>
+      </div>
+      <div class="status-row">
+        <span class="status-label">Project 2</span>
+        <span class="badge pending" id="project2Badge">Checking...</span>
+      </div>
+    </div>
+
+    <div id="generatedBox" style="display:none;" class="generated-box">
+      <p>✓ Resume generated successfully!</p>
+      <a id="downloadBtn" href="#" class="btn" download>⬇ Download Resume PDF</a>
+      <button class="btn secondary" onclick="generateResume()">Regenerate</button>
+    </div>
+
+    <div id="generateSection">
+      <p id="statusMsg" class="loading">Checking your progress...</p>
+      <button id="generateBtn" class="btn" onclick="generateResume()" disabled>Generate Resume</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API_BASE = "http://localhost:3000/api";
+  const studentId = localStorage.getItem("studentId");
+
+  if (!studentId) window.location.href = "auth.html";
+
+  async function checkStatus() {
+    // Check interview
+    const interviewRes = await fetch(`${API_BASE}/student/${studentId}/interview-status`);
+    const interviewData = await interviewRes.json();
+    const hasInterview = interviewData.hasCompletedInterview;
+
+    document.getElementById("interviewBadge").textContent = hasInterview ? "✓ Completed" : "Missing";
+    document.getElementById("interviewBadge").className = `badge ${hasInterview ? "done" : "missing"}`;
+
+    // Check projects
+    const dashRes = await fetch(`${API_BASE}/student/${studentId}/dashboard`);
+    const dashData = await dashRes.json();
+
+    const projRes = await fetch(`${API_BASE}/student/${studentId}/projects`);
+    const projData = await projRes.json();
+    const projects = projData.projects || [];
+
+    const proj1 = projects[0];
+    const proj2 = projects[1];
+
+    const badge = (p) => p ? (p.status === "approved" ? "done" : "pending") : "missing";
+    const label = (p) => p ? (p.status === "approved" ? "✓ Approved" : `⏳ ${p.status}`) : "Not submitted";
+
+    document.getElementById("project1Badge").textContent = label(proj1);
+    document.getElementById("project1Badge").className = `badge ${badge(proj1)}`;
+    document.getElementById("project2Badge").textContent = label(proj2);
+    document.getElementById("project2Badge").className = `badge ${badge(proj2)}`;
+
+    const canGenerate = hasInterview;
+    const generateBtn = document.getElementById("generateBtn");
+    generateBtn.disabled = !canGenerate;
+
+    if (canGenerate) {
+      document.getElementById("statusMsg").textContent = projects.length < 2
+        ? "Interview complete! You can generate your resume now (add projects for a stronger resume)."
+        : "All requirements met! Ready to generate your resume.";
+    } else {
+      document.getElementById("statusMsg").textContent = "Complete the AI interview first to generate your resume.";
+    }
+
+    // Check if resume already exists
+    const resumeRes = await fetch(`${API_BASE}/student/${studentId}/resume`);
+    const resumeData = await resumeRes.json();
+    if (resumeData.exists) {
+      showResume(resumeData.url);
+    }
+  }
+
+  function showResume(url) {
+    document.getElementById("generatedBox").style.display = "block";
+    document.getElementById("generateSection").style.display = "none";
+    document.getElementById("downloadBtn").href = `http://localhost:3000${url}`;
+  }
+
+  async function generateResume() {
+    const btn = document.getElementById("generateBtn");
+    btn.disabled = true;
+    btn.textContent = "Generating...";
+    document.getElementById("statusMsg").textContent = "Building your resume with AI...";
+
+    try {
+      const res = await fetch(`${API_BASE}/student/${studentId}/generate-resume`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json();
+
+      if (data.error) {
+        document.getElementById("statusMsg").innerHTML = `<span class="error">Error: ${data.error}</span>`;
+        btn.disabled = false;
+        btn.textContent = "Try Again";
+        return;
+      }
+
+      showResume(data.url);
+    } catch (err) {
+      document.getElementById("statusMsg").innerHTML = `<span class="error">Something went wrong. Try again.</span>`;
+      btn.disabled = false;
+      btn.textContent = "Try Again";
+    }
+  }
+
+  checkStatus();
+</script>
+
+</body>
+</html>

@@ -170,11 +170,6 @@
     const hasPrograms = dashData.programs && dashData.programs.length > 0;
     const completedConcepts = hasPrograms && dashData.programs.every(p => p.status === "completed");
 
-    // Check project submission status
-    const subRes = await fetch(`${API_BASE}/student/${studentId}/submissions`);
-    const subData = await subRes.json();
-    const hasSubmitted = subData.programs.length > 0 && subData.programs.every(p => p.submission);
-
     // Update step indicators
     if (hasInterview) markStep("step1", "done");
     else markStep("step1", "active");
@@ -183,10 +178,9 @@
     else if (hasInterview) markStep("step2", "active");
 
     if (hasPrograms) markStep("step3", "active");
-    if (hasSubmitted) markStep("step4", "done");
-    else if (hasPrograms) markStep("step4", "active");
+    if (completedConcepts) markStep("step4", "active");
 
-    renderCards(hasInterview, hasPrograms, dashData, sessionId, hasSubmitted);
+    renderCards(hasInterview, hasPrograms, dashData, sessionId);
   }
 
   function markStep(id, state) {
@@ -194,7 +188,7 @@
     el.className = "step " + (state === "done" ? "done" : state === "active" ? "active" : "");
   }
 
-  function renderCards(hasInterview, hasPrograms, data, sessionId, hasSubmitted) {
+  function renderCards(hasInterview, hasPrograms, data, sessionId) {
     const grid = document.getElementById("cardsGrid");
 
     const cards = [
@@ -243,22 +237,20 @@
       {
         icon: "🗂️",
         title: "Project Submission",
-        desc: hasSubmitted
-          ? "Your projects are submitted. Check the mentor review status."
-          : "Upload your 2 course PDFs and 2 repository links for mentor review.",
-        status: hasSubmitted ? "done" : hasPrograms ? "active" : "locked",
-        statusLabel: hasSubmitted ? "Submitted" : hasPrograms ? "Submit Now" : "Enroll first",
-        href: "project-submission.html",
-        locked: !hasPrograms,
+        desc: "Submit your program projects for mentor review.",
+        status: "locked",
+        statusLabel: "Coming Soon",
+        href: "#",
+        locked: true,
       },
       {
         icon: "📄",
         title: "My Resume",
         desc: "AI-generated resume built from your interview, courses, and projects.",
-        status: "locked",
-        statusLabel: "Complete programs first",
-        href: "#",
-        locked: true,
+        status: hasInterview ? "active" : "locked",
+        statusLabel: hasInterview ? "Generate Resume" : "Complete interview first",
+        href: "resume.html",
+        locked: !hasInterview,
       },
       {
         icon: "📺",
