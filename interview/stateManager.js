@@ -4,7 +4,6 @@ import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
-const PHASES = ["introduction", "projects", "hobbies", "technical"];
 const MAX_QUESTIONS_PER_PHASE = {
   introduction: 3,
   projects: 4,
@@ -32,6 +31,8 @@ export async function rebuildState(sessionId) {
   if (qaError) throw qaError;
 
   const knownTopics = session.students.known_topics || [];
+  // Always have at least one topic — fallback to General Programming
+  const topicNames = knownTopics.length > 0 ? knownTopics : ["General Programming"];
 
   // Count Q&As per phase
   const introCount = qaLog.filter(q => q.topic === "introduction").length;
@@ -57,7 +58,7 @@ export async function rebuildState(sessionId) {
   }
 
   // Rebuild technical topic state
-  const topics = knownTopics.map(name => {
+  const topics = topicNames.map(name => {
     const topicQAs = techQAs.filter(q => q.topic === name);
     return {
       name,
@@ -70,9 +71,8 @@ export async function rebuildState(sessionId) {
   if (currentTopicIndex === -1) currentTopicIndex = topics.length;
 
   const totalTechnical = techQAs.length;
-  const isComplete =
-    (phase === "technical" &&
-      (totalTechnical >= MAX_TECHNICAL_QUESTIONS || currentTopicIndex >= topics.length));
+  const isComplete = phase === "technical" &&
+    (totalTechnical >= MAX_TECHNICAL_QUESTIONS || currentTopicIndex >= topics.length);
 
   return {
     sessionId,

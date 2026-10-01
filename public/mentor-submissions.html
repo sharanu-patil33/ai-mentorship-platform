@@ -4,31 +4,252 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Project Submissions – Mentor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+  :root {
+    --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+    --card-bg: rgba(30, 41, 59, 0.7);
+    --card-border: rgba(255, 255, 255, 0.08);
+    --primary: #6366f1;
+    --primary-hover: #4f46e5;
+    --primary-light: rgba(99, 102, 241, 0.15);
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --success: #10b981;
+    --success-hover: #059669;
+    --success-light: rgba(16, 185, 129, 0.15);
+    --warning: #f59e0b;
+    --warning-hover: #d97706;
+    --warning-light: rgba(245, 158, 11, 0.15);
+    --danger: #ef4444;
+    --danger-light: rgba(239, 68, 68, 0.15);
+  }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, "Segoe UI", sans-serif; background: #f5f5f7; }
-  .container { max-width: 900px; margin: 0 auto; padding: 28px 20px; }
-  a.back { font-size: 13px; color: #666; text-decoration: none; }
-  h1 { font-size: 22px; margin: 12px 0 20px; }
-  .card { background: #fff; border-radius: 12px; padding: 18px; margin-bottom: 14px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
-  .row { font-size: 13px; margin: 6px 0; }
-  .badge { font-size: 11px; padding: 3px 10px; border-radius: 10px; margin-left: 6px; }
-  .submitted { background: #fff3bf; color: #e67700; }
-  .approved { background: #d3f9d8; color: #2b8a3e; }
-  .changes_requested { background: #ffe3e3; color: #c92a2a; }
-  textarea { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; margin: 8px 0; font-family: inherit; }
-  button { border: 0; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; margin-right: 6px; }
-  .approve { background: #2b8a3e; color: #fff; }
-  .changes { background: #e67700; color: #fff; }
+
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-gradient);
+    color: var(--text-main);
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+
+  header {
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--card-border);
+    padding: 18px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  header h1 {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  a.back {
+    color: var(--text-muted);
+    font-size: 13px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+
+  a.back:hover {
+    color: var(--text-main);
+  }
+
+  .container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 36px 24px;
+  }
+
+  .mentor-info {
+    font-size: 13px;
+    color: var(--primary);
+    font-weight: 600;
+    margin-bottom: 6px;
+    background: var(--primary-light);
+    padding: 4px 12px;
+    border-radius: 20px;
+    display: inline-block;
+    border: 1px solid rgba(99, 102, 241, 0.3);
+  }
+
+  .page-title {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 24px;
+  }
+
+  .card {
+    background: var(--card-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .student-details {
+    font-size: 15px;
+    color: var(--text-main);
+  }
+
+  .student-details b {
+    font-size: 16px;
+    letter-spacing: -0.2px;
+  }
+
+  .row {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 8px 0;
+    line-height: 1.5;
+  }
+
+  .row a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+    word-break: break-all;
+  }
+
+  .row a:hover {
+    text-decoration: underline;
+  }
+
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  .submitted {
+    background: var(--warning-light);
+    color: var(--warning);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+  }
+
+  .approved {
+    background: var(--success-light);
+    color: var(--success);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+  }
+
+  .changes_requested {
+    background: var(--danger-light);
+    color: var(--danger);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+  }
+
+  textarea {
+    width: 100%;
+    padding: 12px 16px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    margin: 14px 0;
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--text-main);
+    outline: none;
+    resize: vertical;
+    transition: border-color 0.2s;
+  }
+
+  textarea:focus {
+    border-color: var(--primary);
+  }
+
+  textarea::placeholder {
+    color: #64748b;
+  }
+
+  .actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  button {
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .approve {
+    background: var(--success);
+    color: #fff;
+  }
+
+  .approve:hover {
+    background: var(--success-hover);
+    transform: translateY(-1px);
+  }
+
+  .changes {
+    background: var(--warning);
+    color: #fff;
+  }
+
+  .changes:hover {
+    background: var(--warning-hover);
+    transform: translateY(-1px);
+  }
 </style>
 </head>
 <body>
+
+<header>
+  <h1>🗂️ Project Submissions</h1>
+  <a class="back" href="mentor-dashboard.html">← Back to Mentor Dashboard</a>
+</header>
+
 <div class="container">
-  <a class="back" href="mentor-dashboard.html">← Back to mentor dashboard</a>
-  <p id="mentorName" style="font-size:13px;color:#666;margin-top:8px"></p>
-  <h1>Project Submissions</h1>
-  <div id="list">Loading...</div>
+  <div class="mentor-info" id="mentorName"></div>
+  <div class="page-title" style="margin-top: 12px;">Student Projects for Review</div>
+  <div id="list" style="color: var(--text-muted); font-size: 14px;">Loading...</div>
 </div>
+
 <script>
   const API_BASE = "http://localhost:3000/api";
   const mentorId = localStorage.getItem("mentorId");
@@ -45,14 +266,20 @@
     document.getElementById("list").innerHTML = submissions.length
       ? submissions.map((s) => `
         <div class="card">
-          <b>${esc(s.studentName)}</b> · ${esc(s.studentEmail)} · ${esc(s.programName)}
-          <span class="badge ${s.status}">${s.status.replace("_", " ")}</span>
-          <div class="row">PDF: ${s.pdfUrl ? `<a href="${esc(s.pdfUrl)}" target="_blank" rel="noopener">${esc(s.pdfName)}</a>` : "unavailable"}</div>
-          <div class="row">Repo: <a href="${esc(s.repoUrl)}" target="_blank" rel="noopener">${esc(s.repoUrl)}</a></div>
-          <div class="row">Submitted: ${new Date(s.submittedAt).toLocaleString()}</div>
+          <div class="card-header">
+            <div class="student-details">
+              <b>${esc(s.studentName)}</b> · <span style="color:var(--text-muted);">${esc(s.studentEmail)}</span> · <span style="color:var(--primary); font-weight:600;">${esc(s.programName)}</span>
+            </div>
+            <span class="badge ${s.status}">${s.status.replace("_", " ")}</span>
+          </div>
+          <div class="row"><b>PDF:</b> ${s.pdfUrl ? `<a href="${esc(s.pdfUrl)}" target="_blank" rel="noopener">${esc(s.pdfName)}</a>` : "unavailable"}</div>
+          <div class="row"><b>Repo:</b> <a href="${esc(s.repoUrl)}" target="_blank" rel="noopener">${esc(s.repoUrl)}</a></div>
+          <div class="row"><b>Submitted:</b> ${new Date(s.submittedAt).toLocaleString()}</div>
           <textarea id="fb-${s.id}" rows="2" placeholder="Feedback for the student">${esc(s.mentorFeedback || "")}</textarea>
-          <button class="approve" onclick="review(${s.id}, 'approved')">Approve</button>
-          <button class="changes" onclick="review(${s.id}, 'changes_requested')">Request changes</button>
+          <div class="actions">
+            <button class="approve" onclick="review(${s.id}, 'approved')">✓ Approve</button>
+            <button class="changes" onclick="review(${s.id}, 'changes_requested')">⚠ Request Changes</button>
+          </div>
         </div>`).join("")
       : "<p>No submissions yet.</p>";
   }
@@ -69,5 +296,6 @@
   }
   load();
 </script>
+
 </body>
 </html>

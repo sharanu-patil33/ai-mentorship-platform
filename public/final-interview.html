@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Final Interview</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #f5f5f7;
+    display: flex;
+    justify-content: center;
+    padding: 24px;
+    min-height: 100vh;
+  }
+  .app {
+    width: 100%;
+    max-width: 660px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    height: 90vh;
+    overflow: hidden;
+  }
+  header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  header h1 { font-size: 16px; font-weight: 600; }
+  header a { font-size: 12px; color: #888; text-decoration: none; }
+  #setup {
+    padding: 28px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    align-items: center;
+    text-align: center;
+    flex: 1;
+    justify-content: center;
+  }
+  #setup h2 { font-size: 20px; }
+  #setup p { font-size: 14px; color: #666; line-height: 1.6; max-width: 400px; }
+  #chat { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+  #messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .msg {
+    max-width: 82%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  .msg.ai { background: #eee; align-self: flex-start; border-bottom-left-radius: 4px; }
+  .msg.user { background: #111; color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+  .turn-badge {
+    font-size: 11px;
+    color: #aaa;
+    text-align: center;
+    margin: 4px 0;
+  }
+  #inputRow {
+    display: flex;
+    gap: 8px;
+    padding: 16px 20px;
+    border-top: 1px solid #eee;
+    align-items: flex-end;
+  }
+  #answerInput {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    resize: none;
+  }
+  button.send {
+    padding: 10px 16px;
+    background: #111;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  button.primary {
+    padding: 12px 28px;
+    background: #111;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 15px;
+  }
+  .loading { color: #888; font-size: 13px; padding: 4px 20px; }
+  #results {
+    display: none;
+    overflow-y: auto;
+    padding: 24px;
+    flex: 1;
+  }
+  #results h2 { font-size: 18px; margin-bottom: 16px; }
+  .result-section { margin-bottom: 24px; }
+  .result-section h3 { font-size: 14px; font-weight: 600; margin-bottom: 10px; color: #444; }
+  .suggestion-item {
+    background: #f5f5f7;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    line-height: 1.5;
+    margin-bottom: 8px;
+    border-left: 3px solid #111;
+  }
+  .job-card {
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+  }
+  .job-card h4 { font-size: 14px; margin-bottom: 4px; }
+  .job-type { font-size: 11px; padding: 2px 8px; border-radius: 6px; background: #d3f9d8; color: #2b8a3e; display: inline-block; margin-bottom: 6px; }
+  .job-card p { font-size: 13px; color: #666; line-height: 1.4; margin-bottom: 6px; }
+  .platforms { font-size: 12px; color: #888; }
+  .skills-pills { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+  .skill-pill { font-size: 11px; padding: 2px 8px; background: #f1f3f5; border-radius: 6px; color: #555; }
+  .back-btn { display: inline-block; margin-top: 16px; padding: 10px 20px; background: #111; color: #fff; border-radius: 8px; text-decoration: none; font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>🎯 Final Interview</h1>
+    <a href="student-dashboard.html">← Dashboard</a>
+  </header>
+
+  <div id="setup">
+    <div style="font-size:40px;">🎓</div>
+    <h2>Final Viva</h2>
+    <p>This interview is based on your resume and what you've learned. You'll be asked about your projects, skills, and programs. After completing it, you'll receive personalized improvement suggestions and job/internship recommendations.</p>
+    <button class="primary" onclick="startFinalInterview()">Start Final Interview</button>
+  </div>
+
+  <div id="chat">
+    <div id="messages"></div>
+    <div id="inputRow">
+      <textarea id="answerInput" rows="2" placeholder="Type your answer..."></textarea>
+      <button class="send" onclick="submitAnswer()">Send</button>
+    </div>
+  </div>
+
+  <div id="results"></div>
+</div>
+
+<script>
+  const API_BASE = "http://localhost:3000/api";
+  const studentId = localStorage.getItem("studentId");
+  if (!studentId) window.location.href = "auth.html";
+
+  let sessionId = null;
+  let currentQuestion = null;
+  let turnNumber = 0;
+  let resumeContext = null;
+
+  // Check if already completed
+  (async () => {
+    const res = await fetch(`${API_BASE}/final-interview/${studentId}/result`);
+    const data = await res.json();
+    if (data.exists) {
+      document.getElementById("setup").innerHTML = `
+        <div style="font-size:40px;">✅</div>
+        <h2>Final Interview Complete</h2>
+        <p>You've already completed your final interview. View your results below.</p>
+        <button class="primary" onclick="showResults(${JSON.stringify(data.suggestions || []).replace(/"/g, '&quot;')}, ${JSON.stringify(data.job_opportunities || []).replace(/"/g, '&quot;')})">View Results</button>
+      `;
+    }
+  })();
+
+  function addMessage(text, sender) {
+    const msgs = document.getElementById("messages");
+    const div = document.createElement("div");
+    div.className = `msg ${sender}`;
+    div.textContent = text;
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function showLoading(show) {
+    let el = document.getElementById("loadingMsg");
+    if (show && !el) {
+      el = document.createElement("div");
+      el.id = "loadingMsg";
+      el.className = "loading";
+      el.textContent = "Thinking...";
+      document.getElementById("messages").appendChild(el);
+      document.getElementById("messages").scrollTop = 99999;
+    } else if (!show && el) el.remove();
+  }
+
+  async function startFinalInterview() {
+    document.getElementById("setup").style.display = "none";
+    document.getElementById("chat").style.display = "flex";
+    showLoading(true);
+
+    const res = await fetch(`${API_BASE}/final-interview/start`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ studentId }),
+    });
+    const data = await res.json();
+    showLoading(false);
+
+    if (data.error) { addMessage("Error: " + data.error, "ai"); return; }
+
+    sessionId = data.sessionId;
+    currentQuestion = data.question;
+    resumeContext = data.context;
+    turnNumber = 1;
+
+    const badge = document.createElement("div");
+    badge.className = "turn-badge";
+    badge.textContent = "Question 1 of 10";
+    document.getElementById("messages").appendChild(badge);
+    addMessage(currentQuestion, "ai");
+  }
+
+  async function submitAnswer() {
+    const input = document.getElementById("answerInput");
+    const answer = input.value.trim();
+    if (!answer) return;
+
+    addMessage(answer, "user");
+    input.value = "";
+    showLoading(true);
+
+    const res = await fetch(`${API_BASE}/final-interview/answer`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId, studentId, question: currentQuestion, answer, turnNumber, context: resumeContext }),
+    });
+    const data = await res.json();
+    showLoading(false);
+
+    if (data.done || turnNumber >= 10) {
+      addMessage("Thank you! Generating your results...", "ai");
+      document.getElementById("inputRow").style.display = "none";
+      await completeInterview();
+      return;
+    }
+
+    turnNumber += 1;
+    currentQuestion = data.question;
+
+    const badge = document.createElement("div");
+    badge.className = "turn-badge";
+    badge.textContent = `Question ${turnNumber} of 10`;
+    document.getElementById("messages").appendChild(badge);
+    addMessage(currentQuestion, "ai");
+  }
+
+  async function completeInterview() {
+    const res = await fetch(`${API_BASE}/final-interview/complete`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId, studentId }),
+    });
+    const data = await res.json();
+
+    document.getElementById("chat").style.display = "none";
+    showResults(data.suggestions || [], data.jobOpportunities || []);
+  }
+
+  function showResults(suggestions, jobs) {
+    const el = document.getElementById("results");
+    el.style.display = "block";
+    document.getElementById("setup").style.display = "none";
+
+    const suggestionHTML = suggestions.map(s =>
+      `<div class="suggestion-item">💡 ${s}</div>`
+    ).join("");
+
+    const jobsHTML = jobs.map(j => `
+      <div class="job-card">
+        <h4>${j.role}</h4>
+        <span class="job-type">${j.type}</span>
+        <p>${j.description}</p>
+        <div class="skills-pills">${(j.skills_needed || []).map(s => `<span class="skill-pill">${s}</span>`).join("")}</div>
+        <p class="platforms">🔍 Find on: ${(j.platforms || []).join(", ")}</p>
+      </div>
+    `).join("");
+
+    el.innerHTML = `
+      <h2>🎉 Final Interview Complete!</h2>
+      <div class="result-section">
+        <h3>💡 Improvement Suggestions</h3>
+        ${suggestionHTML || "<p style='color:#888; font-size:13px;'>Great performance — keep it up!</p>"}
+      </div>
+      <div class="result-section">
+        <h3>🚀 Internship & Job Opportunities</h3>
+        ${jobsHTML || "<p style='color:#888; font-size:13px;'>Keep building your skills to unlock more opportunities.</p>"}
+      </div>
+      <a href="student-dashboard.html" class="back-btn">← Back to Dashboard</a>
+    `;
+  }
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey && document.activeElement.id === "answerInput") {
+      e.preventDefault();
+      submitAnswer();
+    }
+  });
+</script>
+</body>
+</html>

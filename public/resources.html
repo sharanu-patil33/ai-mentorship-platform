@@ -4,88 +4,227 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Learning Resources</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    background: #f5f5f7;
-    min-height: 100vh;
+  :root {
+    --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+    --card-bg: rgba(30, 41, 59, 0.7);
+    --card-border: rgba(255, 255, 255, 0.08);
+    --primary: #6366f1;
+    --primary-hover: #4f46e5;
+    --primary-light: rgba(99, 102, 241, 0.15);
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --danger: #ef4444;
   }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-gradient);
+    color: var(--text-main);
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+
   header {
-    background: #111;
-    color: #fff;
-    padding: 16px 24px;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--card-border);
+    padding: 18px 32px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 50;
   }
-  header h1 { font-size: 18px; }
-  header a { color: #ccc; font-size: 13px; text-decoration: none; }
-  .container { max-width: 900px; margin: 0 auto; padding: 28px 20px; }
-  .page-title { font-size: 22px; margin-bottom: 6px; }
-  .page-sub { font-size: 14px; color: #666; margin-bottom: 28px; }
-  .program-section { margin-bottom: 32px; }
+
+  header h1 {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  header a {
+    color: var(--text-muted);
+    font-size: 13px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+
+  header a:hover {
+    color: var(--text-main);
+  }
+
+  .container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 36px 24px;
+  }
+
+  .page-title {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+  }
+
+  .page-sub {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 36px;
+  }
+
+  .program-section {
+    margin-bottom: 40px;
+  }
+
   .program-header {
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-bottom: 14px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid #eee;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--card-border);
   }
-  .program-icon { font-size: 24px; }
-  .program-name { font-size: 17px; font-weight: 600; }
-  .videos-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 14px;
-  }
-  .video-card {
-    background: #fff;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
-    text-decoration: none;
-    color: inherit;
-    transition: box-shadow 0.15s, transform 0.15s;
-    display: block;
-  }
-  .video-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12); transform: translateY(-2px); }
-  .video-thumb {
-    width: 100%;
-    aspect-ratio: 16/9;
-    background: #111;
+
+  .program-icon {
+    font-size: 22px;
+    width: 42px;
+    height: 42px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    border: 1px solid var(--card-border);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 36px;
-    position: relative;
   }
-  .video-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+  .program-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-main);
+    letter-spacing: -0.2px;
+  }
+
+  .videos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+  }
+
+  .video-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--card-border);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .video-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(99, 102, 241, 0.4);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
+  }
+
+  .video-thumb {
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: #090d16 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    border-bottom: 1px solid var(--card-border);
+  }
+
+  .video-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
   .play-overlay {
     position: absolute;
-    width: 44px;
-    height: 44px;
-    background: rgba(255,0,0,0.85);
+    width: 48px;
+    height: 48px;
+    background: rgba(239, 68, 68, 0.9);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     color: #fff;
-    font-size: 18px;
+    font-size: 16px;
+    padding-left: 3px;
+    box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
+    transition: transform 0.2s;
   }
-  .video-info { padding: 12px 14px; }
-  .video-channel { font-size: 11px; color: #e00; font-weight: 600; margin-bottom: 4px; }
-  .video-title { font-size: 13px; font-weight: 500; line-height: 1.4; margin-bottom: 6px; }
-  .video-desc { font-size: 12px; color: #888; line-height: 1.4; }
+
+  .video-card:hover .play-overlay {
+    transform: scale(1.1);
+    background: #ef4444;
+  }
+
+  .video-info {
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  .video-channel {
+    font-size: 11px;
+    color: var(--danger);
+    font-weight: 700;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .video-title {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.4;
+    margin-bottom: 8px;
+    color: var(--text-main);
+  }
+
+  .video-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 14px;
+    flex: 1;
+  }
+
   .tag {
     display: inline-block;
     font-size: 10px;
-    padding: 2px 7px;
-    border-radius: 6px;
-    background: #f1f3f5;
-    color: #555;
-    margin-top: 6px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: var(--primary-light);
+    color: var(--primary);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    width: fit-content;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
   }
 </style>
 </head>
@@ -108,7 +247,7 @@
     </div>
     <div class="videos-grid">
       <a class="video-card" href="https://www.youtube.com/watch?v=aircAruvnKk&list=PLZHQObOWTQDNU6R1_67000Dx_ZCJB-3pi" target="_blank">
-        <div class="video-thumb" style="background:#1a1a2e;">
+        <div class="video-thumb">
           <div class="play-overlay">▶</div>
         </div>
         <div class="video-info">
@@ -119,7 +258,7 @@
         </div>
       </a>
       <a class="video-card" href="https://www.youtube.com/watch?v=bPrmA1SEN2k&list=PLZoTAELRMXVPBTrWtJkn3wWQxZkmTXGwe" target="_blank">
-        <div class="video-thumb" style="background:#1a1a2e;">
+        <div class="video-thumb">
           <div class="play-overlay">▶</div>
         </div>
         <div class="video-info">
@@ -130,7 +269,7 @@
         </div>
       </a>
       <a class="video-card" href="https://www.youtube.com/watch?v=ySEx_Bqxvvo&list=PLhhyoLH6IjfxeoooqP9rhU3HJIAVAJ3Vz" target="_blank">
-        <div class="video-thumb" style="background:#1a1a2e;">
+        <div class="video-thumb">
           <div class="play-overlay">▶</div>
         </div>
         <div class="video-info">
@@ -141,7 +280,7 @@
         </div>
       </a>
       <a class="video-card" href="https://www.youtube.com/watch?v=i_LwzRVP7bg" target="_blank">
-        <div class="video-thumb" style="background:#1a1a2e;">
+        <div class="video-thumb">
           <div class="play-overlay">▶</div>
         </div>
         <div class="video-info">
@@ -162,7 +301,7 @@
     </div>
     <div class="videos-grid">
       <a class="video-card" href="https://www.youtube.com/watch?v=w7ejDZ8SWv8" target="_blank">
-        <div class="video-thumb" style="background:#1a1a2e;">
+        <div class="video-thumb">
           <div class="play-overlay">▶</div>
         </div>
         <div class="video-info">
@@ -173,7 +312,7 @@
         </div>
       </a>
       <a class="video-card" href="https://www.youtube.com/watch?v=Oe421EPjeBE" target="_blank">
-        <div class="video-thumb" style="background:#1a1a2e;">
+        <div class="video-thumb">
           <div class="play-overlay">▶</div>
         </div>
         <div class="video-info">
@@ -184,7 +323,7 @@
         </div>
       </a>
       <a class="video-card" href="https://www.youtube.com/watch?v=98BzS5Oz5E4&list=PL4cUxeGkcC9g8OhpOZxNdhXggFz2lOuCT" target="_blank">
-        <div class="video-thumb" style="background:#1a1a2e;">
+        <div class="video-thumb">
           <div class="play-overlay">▶</div>
         </div>
         <div class="video-info">
@@ -195,7 +334,7 @@
         </div>
       </a>
       <a class="video-card" href="https://www.youtube.com/watch?v=rHux0gMZ3Eg" target="_blank">
-        <div class="video-thumb" style="background:#1a1a2e;">
+        <div class="video-thumb">
           <div class="play-overlay">▶</div>
         </div>
         <div class="video-info">
@@ -216,7 +355,7 @@
     </div>
     <div class="videos-grid">
       <a class="video-card" href="https://www.youtube.com/watch?v=k1RI5locZE4" target="_blank">
-        <div class="video-thumb" style="background:#1a1a2e;">
+        <div class="video-thumb">
           <div class="play-overlay">▶</div>
         </div>
         <div class="video-info">
@@ -227,7 +366,7 @@
         </div>
       </a>
       <a class="video-card" href="https://www.youtube.com/watch?v=fqMOX6JJhGo" target="_blank">
-        <div class="video-thumb" style="background:#1a1a2e;">
+        <div class="video-thumb">
           <div class="play-overlay">▶</div>
         </div>
         <div class="video-info">
@@ -238,7 +377,7 @@
         </div>
       </a>
       <a class="video-card" href="https://www.youtube.com/watch?v=scEDHsr3APg" target="_blank">
-        <div class="video-thumb" style="background:#1a1a2e;">
+        <div class="video-thumb">
           <div class="play-overlay">▶</div>
         </div>
         <div class="video-info">
@@ -249,7 +388,7 @@
         </div>
       </a>
       <a class="video-card" href="https://www.youtube.com/watch?v=IPvYjXCsTg8" target="_blank">
-        <div class="video-thumb" style="background:#1a1a2e;">
+        <div class="video-thumb">
           <div class="play-overlay">▶</div>
         </div>
         <div class="video-info">
@@ -270,7 +409,7 @@
     </div>
     <div class="videos-grid">
       <a class="video-card" href="https://www.youtube.com/watch?v=3Kq1MIfTWCE" target="_blank">
-        <div class="video-thumb" style="background:#1a1a2e;">
+        <div class="video-thumb">
           <div class="play-overlay">▶</div>
         </div>
         <div class="video-info">
@@ -281,7 +420,7 @@
         </div>
       </a>
       <a class="video-card" href="https://www.youtube.com/watch?v=XLvPpirlmEs" target="_blank">
-        <div class="video-thumb" style="background:#1a1a2e;">
+        <div class="video-thumb">
           <div class="play-overlay">▶</div>
         </div>
         <div class="video-info">
@@ -292,7 +431,7 @@
         </div>
       </a>
       <a class="video-card" href="https://www.youtube.com/watch?v=inWWhr5tnEA" target="_blank">
-        <div class="video-thumb" style="background:#1a1a2e;">
+        <div class="video-thumb">
           <div class="play-overlay">▶</div>
         </div>
         <div class="video-info">
@@ -303,7 +442,7 @@
         </div>
       </a>
       <a class="video-card" href="https://www.youtube.com/watch?v=dz7Ntp7KQGA" target="_blank">
-        <div class="video-thumb" style="background:#1a1a2e;">
+        <div class="video-thumb">
           <div class="play-overlay">▶</div>
         </div>
         <div class="video-info">

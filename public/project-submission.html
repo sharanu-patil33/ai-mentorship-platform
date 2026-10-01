@@ -4,31 +4,248 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Project Submission</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+  :root {
+    --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+    --card-bg: rgba(30, 41, 59, 0.7);
+    --card-border: rgba(255, 255, 255, 0.08);
+    --primary: #6366f1;
+    --primary-hover: #4f46e5;
+    --primary-light: rgba(99, 102, 241, 0.15);
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --success: #10b981;
+    --success-light: rgba(16, 185, 129, 0.15);
+    --warning: #f59e0b;
+    --warning-light: rgba(245, 158, 11, 0.15);
+    --danger: #ef4444;
+    --danger-light: rgba(239, 68, 68, 0.15);
+  }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, "Segoe UI", sans-serif; background: #f5f5f7; }
-  .container { max-width: 720px; margin: 0 auto; padding: 28px 20px; }
-  a.back { font-size: 13px; color: #666; text-decoration: none; }
-  h1 { font-size: 22px; margin: 12px 0 20px; }
-  .box { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
-  .box h3 { font-size: 16px; margin-bottom: 12px; }
-  label { display: block; font-size: 13px; color: #555; margin: 10px 0 4px; }
-  input[type=text], input[type=url] { width: 100%; padding: 9px 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
-  button { background: #111; color: #fff; border: 0; padding: 11px 22px; border-radius: 8px; font-size: 14px; cursor: pointer; }
-  button:disabled { opacity: .5; cursor: not-allowed; }
-  .msg { font-size: 13px; margin-top: 12px; }
-  .err { color: #c92a2a; } .ok { color: #2b8a3e; }
-  .badge { display: inline-block; font-size: 11px; padding: 3px 10px; border-radius: 10px; margin-bottom: 8px; }
-  .submitted { background: #fff3bf; color: #e67700; }
-  .approved { background: #d3f9d8; color: #2b8a3e; }
-  .changes_requested { background: #ffe3e3; color: #c92a2a; }
+
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-gradient);
+    color: var(--text-main);
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+
+  header {
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--card-border);
+    padding: 18px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  header h1 {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  a.back {
+    color: var(--text-muted);
+    font-size: 13px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+
+  a.back:hover {
+    color: var(--text-main);
+  }
+
+  .container {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 36px 24px;
+  }
+
+  .page-title {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 24px;
+  }
+
+  .box {
+    background: var(--card-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    padding: 28px;
+    margin-bottom: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  }
+
+  .box h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--text-main);
+    letter-spacing: -0.3px;
+  }
+
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin: 14px 0 6px;
+  }
+
+  input[type=text], input[type=url] {
+    width: 100%;
+    padding: 12px 16px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    font-size: 14px;
+    color: var(--text-main);
+    outline: none;
+    font-family: inherit;
+    transition: border-color 0.2s;
+  }
+
+  input[type=text]:focus, input[type=url]:focus {
+    border-color: var(--primary);
+  }
+
+  input[type=file] {
+    width: 100%;
+    padding: 10px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px dashed var(--card-border);
+    border-radius: 12px;
+    font-size: 13px;
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+
+  input[type=file]::-webkit-file-upload-button {
+    background: var(--primary-light);
+    color: var(--primary);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    padding: 6px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    margin-right: 12px;
+  }
+
+  button {
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    padding: 14px 28px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin-top: 8px;
+  }
+
+  button:hover:not(:disabled) {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+  }
+
+  button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .msg {
+    font-size: 13px;
+    margin-top: 14px;
+    text-align: center;
+    font-weight: 500;
+  }
+
+  .err { color: var(--danger); } 
+  .ok { color: var(--success); }
+
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  .submitted {
+    background: var(--warning-light);
+    color: var(--warning);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+  }
+
+  .approved {
+    background: var(--success-light);
+    color: var(--success);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+  }
+
+  .changes_requested {
+    background: var(--danger-light);
+    color: var(--danger);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+  }
+
+  .box a {
+    color: var(--primary);
+    text-decoration: none;
+    word-break: break-all;
+  }
+
+  .box a:hover {
+    text-decoration: underline;
+  }
+
+  .feedback-box {
+    margin-top: 12px;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border-left: 3px solid var(--primary);
+    border-radius: 0 8px 8px 0;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
 </style>
 </head>
 <body>
+
+<header>
+  <h1>🗂️ Project Submission</h1>
+  <a class="back" href="student-dashboard.html">← Back to Dashboard</a>
+</header>
+
 <div class="container">
-  <a class="back" href="student-dashboard.html">← Back to dashboard</a>
-  <h1>Project Submission</h1>
-  <div id="content">Loading...</div>
+  <div class="page-title">Submit Program Projects</div>
+  <div id="content" style="color: var(--text-muted); font-size: 14px;">Loading...</div>
 </div>
 
 <script>
@@ -58,9 +275,9 @@
         <div class="box">
           <h3>${esc(p.programName)}</h3>
           <span class="badge ${p.submission.status}">${p.submission.status.replace("_", " ")}</span>
-          <p style="font-size:13px">PDF: ${esc(p.submission.pdf_name)}</p>
-          <p style="font-size:13px">Repo: <a href="${esc(p.submission.repo_url)}" target="_blank" rel="noopener">${esc(p.submission.repo_url)}</a></p>
-          ${p.submission.mentor_feedback ? `<p style="font-size:13px;margin-top:8px"><b>Mentor feedback:</b> ${esc(p.submission.mentor_feedback)}</p>` : ""}
+          <p style="font-size:13px; color:var(--text-muted); margin-bottom:6px;"><b>PDF:</b> ${esc(p.submission.pdf_name)}</p>
+          <p style="font-size:13px; color:var(--text-muted);"><b>Repo:</b> <a href="${esc(p.submission.repo_url)}" target="_blank" rel="noopener">${esc(p.submission.repo_url)}</a></p>
+          ${p.submission.mentor_feedback ? `<div class="feedback-box"><b>Mentor feedback:</b> ${esc(p.submission.mentor_feedback)}</div>` : ""}
         </div>`).join("");
     }
     if (!canEdit) { content.innerHTML = html; return; }
