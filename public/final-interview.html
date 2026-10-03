@@ -4,158 +4,471 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Final Interview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+  :root {
+    --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+    --card-bg: rgba(30, 41, 59, 0.7);
+    --card-border: rgba(255, 255, 255, 0.08);
+    --primary: #6366f1;
+    --primary-hover: #4f46e5;
+    --primary-light: rgba(99, 102, 241, 0.15);
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --ai-msg-bg: rgba(51, 65, 85, 0.6);
+    --user-msg-bg: #6366f1;
+    --success: #10b981;
+    --success-light: rgba(16, 185, 129, 0.15);
+    --danger: #ef4444;
+  }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
+
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    background: #f5f5f7;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-gradient);
+    color: var(--text-main);
     display: flex;
     justify-content: center;
-    padding: 24px;
+    align-items: center;
     min-height: 100vh;
+    padding: 20px;
   }
+
   .app {
     width: 100%;
-    max-width: 660px;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    max-width: 720px;
+    background: var(--card-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--card-border);
+    border-radius: 24px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
     display: flex;
     flex-direction: column;
-    height: 90vh;
+    height: 85vh;
+    max-height: 800px;
     overflow: hidden;
+    position: relative;
   }
+
   header {
-    padding: 16px 20px;
-    border-bottom: 1px solid #eee;
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--card-border);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background: rgba(15, 23, 42, 0.4);
   }
-  header h1 { font-size: 16px; font-weight: 600; }
-  header a { font-size: 12px; color: #888; text-decoration: none; }
+
+  header h1 {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  header a {
+    font-size: 13px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+
+  header a:hover {
+    color: var(--text-main);
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .voice-toggle {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--card-border);
+    color: var(--text-muted);
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+
+  .voice-toggle:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-main);
+  }
+
+  .voice-toggle.on {
+    color: var(--success);
+    border-color: rgba(16, 185, 129, 0.4);
+    background: var(--success-light);
+  }
+
+  /* Setup View */
   #setup {
-    padding: 28px 24px;
+    padding: 40px 32px;
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 16px;
     align-items: center;
     text-align: center;
     flex: 1;
     justify-content: center;
   }
-  #setup h2 { font-size: 20px; }
-  #setup p { font-size: 14px; color: #666; line-height: 1.6; max-width: 400px; }
-  #chat { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+
+  #setup h2 {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--text-main);
+  }
+
+  #setup p {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    max-width: 440px;
+    margin: 0;
+  }
+
+  #setup p.voice-note {
+    font-size: 12px;
+    color: var(--primary);
+  }
+
+  button.primary {
+    padding: 14px 32px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  button.primary:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+  }
+
+  /* Chat View */
+  #chat {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+  }
+
   #messages {
     flex: 1;
     overflow-y: auto;
-    padding: 20px;
+    padding: 24px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 16px;
+    scroll-behavior: smooth;
   }
+
   .msg {
     max-width: 82%;
-    padding: 10px 14px;
-    border-radius: 14px;
+    padding: 12px 18px;
+    border-radius: 18px;
     font-size: 14px;
-    line-height: 1.4;
+    line-height: 1.5;
+    animation: fadeIn 0.25s ease-out;
+    word-break: break-word;
   }
-  .msg.ai { background: #eee; align-self: flex-start; border-bottom-left-radius: 4px; }
-  .msg.user { background: #111; color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .msg.ai {
+    background: var(--ai-msg-bg);
+    color: var(--text-main);
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+    border: 1px solid var(--card-border);
+  }
+
+  .msg.user {
+    background: var(--user-msg-bg);
+    color: #fff;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+  }
+
   .turn-badge {
     font-size: 11px;
-    color: #aaa;
+    font-weight: 600;
+    color: var(--primary);
     text-align: center;
-    margin: 4px 0;
+    margin: 8px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: var(--primary-light);
+    padding: 4px 12px;
+    border-radius: 20px;
+    width: fit-content;
+    align-self: center;
+    border: 1px solid rgba(99, 102, 241, 0.3);
   }
+
+  #voiceStatus {
+    font-size: 12px;
+    color: var(--text-muted);
+    padding: 6px 24px 0;
+    min-height: 24px;
+  }
+
   #inputRow {
     display: flex;
-    gap: 8px;
-    padding: 16px 20px;
-    border-top: 1px solid #eee;
-    align-items: flex-end;
+    gap: 10px;
+    padding: 16px 24px;
+    border-top: 1px solid var(--card-border);
+    background: rgba(15, 23, 42, 0.3);
+    align-items: center;
   }
+
   #answerInput {
     flex: 1;
-    padding: 10px 12px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
+    padding: 12px 16px;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
     font-size: 14px;
+    color: var(--text-main);
     resize: none;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.2s;
   }
+
+  #answerInput:focus {
+    border-color: var(--primary);
+  }
+
+  #answerInput::placeholder {
+    color: #64748b;
+  }
+
   button.send {
-    padding: 10px 16px;
-    background: #111;
+    padding: 12px 20px;
+    background: var(--primary);
     color: #fff;
     border: none;
-    border-radius: 8px;
+    border-radius: 12px;
     cursor: pointer;
     font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s;
   }
-  button.primary {
-    padding: 12px 28px;
-    background: #111;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
+
+  button.send:hover {
+    background: var(--primary-hover);
+  }
+
+  button.icon-btn {
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
     cursor: pointer;
-    font-size: 15px;
+    font-size: 18px;
+    transition: all 0.2s;
+    color: var(--text-main);
   }
-  .loading { color: #888; font-size: 13px; padding: 4px 20px; }
+
+  button.icon-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  button.icon-btn.listening {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: var(--danger);
+    animation: pulse 1.2s infinite;
+  }
+
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5); }
+    70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+  }
+
+  .loading {
+    color: var(--text-muted);
+    font-size: 13px;
+    padding: 8px 12px;
+    align-self: flex-start;
+  }
+
+  /* Results View */
   #results {
     display: none;
     overflow-y: auto;
-    padding: 24px;
+    padding: 32px;
     flex: 1;
   }
-  #results h2 { font-size: 18px; margin-bottom: 16px; }
-  .result-section { margin-bottom: 24px; }
-  .result-section h3 { font-size: 14px; font-weight: 600; margin-bottom: 10px; color: #444; }
-  .suggestion-item {
-    background: #f5f5f7;
-    border-radius: 8px;
-    padding: 10px 14px;
-    font-size: 13px;
-    line-height: 1.5;
-    margin-bottom: 8px;
-    border-left: 3px solid #111;
+
+  #results h2 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 24px;
+    color: var(--text-main);
+    border-bottom: 1px solid var(--card-border);
+    padding-bottom: 12px;
   }
+
+  .result-section {
+    margin-bottom: 28px;
+  }
+
+  .result-section h3 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    color: var(--primary);
+    letter-spacing: -0.2px;
+  }
+
+  .suggestion-item {
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-size: 13px;
+    line-height: 1.6;
+    margin-bottom: 10px;
+    color: var(--text-main);
+    border-left: 3px solid var(--primary);
+  }
+
   .job-card {
-    background: #fff;
-    border: 1px solid #eee;
-    border-radius: 10px;
-    padding: 14px 16px;
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 18px 20px;
+    margin-bottom: 14px;
+  }
+
+  .job-card h4 {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: var(--text-main);
+  }
+
+  .job-type {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: var(--success-light);
+    color: var(--success);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    display: inline-block;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  .job-card p {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.5;
     margin-bottom: 10px;
   }
-  .job-card h4 { font-size: 14px; margin-bottom: 4px; }
-  .job-type { font-size: 11px; padding: 2px 8px; border-radius: 6px; background: #d3f9d8; color: #2b8a3e; display: inline-block; margin-bottom: 6px; }
-  .job-card p { font-size: 13px; color: #666; line-height: 1.4; margin-bottom: 6px; }
-  .platforms { font-size: 12px; color: #888; }
-  .skills-pills { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
-  .skill-pill { font-size: 11px; padding: 2px 8px; background: #f1f3f5; border-radius: 6px; color: #555; }
-  .back-btn { display: inline-block; margin-top: 16px; padding: 10px 20px; background: #111; color: #fff; border-radius: 8px; text-decoration: none; font-size: 14px; }
+
+  .platforms {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 8px;
+  }
+
+  .skills-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .skill-pill {
+    font-size: 11px;
+    padding: 3px 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    color: var(--text-main);
+  }
+
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 12px;
+    padding: 12px 24px;
+    background: var(--primary);
+    color: #fff;
+    border-radius: 12px;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+
+  .back-btn:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+  }
 </style>
 </head>
 <body>
+
 <div class="app">
   <header>
     <h1>🎯 Final Interview</h1>
-    <a href="student-dashboard.html">← Dashboard</a>
+    <div class="header-right">
+      <button class="voice-toggle" id="voiceToggle" onclick="toggleVoice()" title="Turn AI voice on/off">🔊 Voice: On</button>
+      <a href="student-dashboard.html">← Dashboard</a>
+    </div>
   </header>
 
   <div id="setup">
-    <div style="font-size:40px;">🎓</div>
+    <div style="font-size:48px; width:80px; height:80px; background:var(--primary-light); border:1px solid rgba(99,102,241,0.3); border-radius:20px; display:flex; align-items:center; justify-content:center;">🎓</div>
     <h2>Final Viva</h2>
     <p>This interview is based on your resume and what you've learned. You'll be asked about your projects, skills, and programs. After completing it, you'll receive personalized improvement suggestions and job/internship recommendations.</p>
+    <p class="voice-note" id="voiceNote">🔊 The AI will ask each question out loud. You can answer by typing or by speaking with the 🎤 button.</p>
     <button class="primary" onclick="startFinalInterview()">Start Final Interview</button>
   </div>
 
   <div id="chat">
     <div id="messages"></div>
+    <div id="voiceStatus"></div>
     <div id="inputRow">
-      <textarea id="answerInput" rows="2" placeholder="Type your answer..."></textarea>
+      <textarea id="answerInput" rows="1" placeholder="Type your answer or tap the mic..."></textarea>
+      <button class="icon-btn" id="replayBtn" onclick="replayQuestion()" title="Hear the question again">🔁</button>
+      <button class="icon-btn" id="micBtn" onclick="toggleMic()" title="Answer with your voice">🎤</button>
       <button class="send" onclick="submitAnswer()">Send</button>
     </div>
   </div>
@@ -173,13 +486,148 @@
   let turnNumber = 0;
   let resumeContext = null;
 
+  // ---------------- Voice: AI speaks (text-to-speech) ----------------
+  const synth = window.speechSynthesis || null;
+  let voiceOn = localStorage.getItem("interviewVoice") !== "off";
+
+  function renderVoiceToggle() {
+    const btn = document.getElementById("voiceToggle");
+    btn.textContent = voiceOn ? "🔊 Voice: On" : "🔇 Voice: Off";
+    btn.classList.toggle("on", voiceOn);
+  }
+
+  function toggleVoice() {
+    voiceOn = !voiceOn;
+    localStorage.setItem("interviewVoice", voiceOn ? "on" : "off");
+    if (!voiceOn) stopSpeaking();
+    renderVoiceToggle();
+  }
+
+  function setStatus(text) {
+    document.getElementById("voiceStatus").textContent = text || "";
+  }
+
+  function pickVoice() {
+    if (!synth) return null;
+    const voices = synth.getVoices();
+    return voices.find(v => v.lang === "en-IN") ||
+           voices.find(v => v.lang && v.lang.toLowerCase().startsWith("en")) ||
+           null;
+  }
+
+  function stopSpeaking() {
+    if (synth) synth.cancel();
+    setStatus("");
+  }
+
+  function speak(text) {
+    if (!synth || !voiceOn || !text) return;
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    const v = pickVoice();
+    if (v) u.voice = v;
+    u.lang = v ? v.lang : "en-IN";
+    u.rate = 0.95;
+    u.onstart = () => setStatus("🔊 AI is speaking...");
+    u.onend = () => setStatus("");
+    u.onerror = () => setStatus("");
+    synth.speak(u);
+  }
+
+  function replayQuestion() {
+    if (!currentQuestion) return;
+    if (!voiceOn) { voiceOn = true; localStorage.setItem("interviewVoice", "on"); renderVoiceToggle(); }
+    stopListening();
+    speak(currentQuestion);
+  }
+
+  if (synth) synth.onvoiceschanged = () => {};
+  renderVoiceToggle();
+  if (!synth) {
+    document.getElementById("voiceToggle").style.display = "none";
+    document.getElementById("replayBtn").style.display = "none";
+  }
+  window.addEventListener("beforeunload", () => { if (synth) synth.cancel(); });
+
+  // ---------------- Voice: student speaks (speech-to-text) ----------------
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let recognition = null;
+  let listening = false;
+  let baseText = "";
+  let finalText = "";
+
+  if (!SpeechRecognition) {
+    document.getElementById("micBtn").style.display = "none";
+    document.getElementById("voiceNote").textContent =
+      "🔊 The AI will ask each question out loud. Voice answers need Chrome or Edge — in this browser, please type your answers.";
+  }
+
+  function toggleMic() {
+    if (listening) stopListening(); else startListening();
+  }
+
+  function startListening() {
+    if (!SpeechRecognition || listening) return;
+    stopSpeaking(); // so the AI voice is not picked up by the mic
+
+    recognition = new SpeechRecognition();
+    recognition.lang = "en-IN";
+    recognition.continuous = true;
+    recognition.interimResults = true;
+
+    const input = document.getElementById("answerInput");
+    baseText = input.value.trim();
+    finalText = "";
+
+    recognition.onstart = () => {
+      listening = true;
+      document.getElementById("micBtn").classList.add("listening");
+      setStatus("🎤 Listening... speak your answer, then tap the mic again to stop.");
+    };
+
+    recognition.onresult = (event) => {
+      let interim = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const t = event.results[i][0].transcript;
+        if (event.results[i].isFinal) finalText += t + " ";
+        else interim += t;
+      }
+      input.value = (baseText ? baseText + " " : "") + finalText + interim;
+    };
+
+    recognition.onerror = (event) => {
+      if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+        setStatus("⚠️ Microphone blocked. Allow mic access in the browser (and open this page via http://localhost:3000).");
+      } else if (event.error === "no-speech") {
+        setStatus("No speech detected. Tap the mic and try again.");
+      } else if (event.error !== "aborted") {
+        setStatus("⚠️ Voice input error: " + event.error);
+      }
+    };
+
+    recognition.onend = () => {
+      listening = false;
+      document.getElementById("micBtn").classList.remove("listening");
+      const status = document.getElementById("voiceStatus").textContent;
+      if (status.startsWith("🎤")) setStatus("");
+    };
+
+    try { recognition.start(); } catch (e) { /* already started */ }
+  }
+
+  function stopListening() {
+    if (recognition && listening) recognition.stop();
+  }
+
+  // ---------------- Existing interview logic ----------------
+
   // Check if already completed
   (async () => {
     const res = await fetch(`${API_BASE}/final-interview/${studentId}/result`);
     const data = await res.json();
     if (data.exists) {
       document.getElementById("setup").innerHTML = `
-        <div style="font-size:40px;">✅</div>
+        <div style="font-size:48px; width:80px; height:80px; background:var(--success-light); border:1px solid rgba(16,185,129,0.3); border-radius:20px; display:flex; align-items:center; justify-content:center;">✅</div>
         <h2>Final Interview Complete</h2>
         <p>You've already completed your final interview. View your results below.</p>
         <button class="primary" onclick="showResults(${JSON.stringify(data.suggestions || []).replace(/"/g, '&quot;')}, ${JSON.stringify(data.job_opportunities || []).replace(/"/g, '&quot;')})">View Results</button>
@@ -202,7 +650,7 @@
       el = document.createElement("div");
       el.id = "loadingMsg";
       el.className = "loading";
-      el.textContent = "Thinking...";
+      el.textContent = "AI is thinking...";
       document.getElementById("messages").appendChild(el);
       document.getElementById("messages").scrollTop = 99999;
     } else if (!show && el) el.remove();
@@ -233,12 +681,16 @@
     badge.textContent = "Question 1 of 10";
     document.getElementById("messages").appendChild(badge);
     addMessage(currentQuestion, "ai");
+    speak(currentQuestion);
   }
 
   async function submitAnswer() {
     const input = document.getElementById("answerInput");
     const answer = input.value.trim();
     if (!answer) return;
+
+    stopListening();
+    stopSpeaking();
 
     addMessage(answer, "user");
     input.value = "";
@@ -254,6 +706,7 @@
 
     if (data.done || turnNumber >= 10) {
       addMessage("Thank you! Generating your results...", "ai");
+      speak("Thank you! Generating your results.");
       document.getElementById("inputRow").style.display = "none";
       await completeInterview();
       return;
@@ -267,6 +720,7 @@
     badge.textContent = `Question ${turnNumber} of 10`;
     document.getElementById("messages").appendChild(badge);
     addMessage(currentQuestion, "ai");
+    speak(currentQuestion);
   }
 
   async function completeInterview() {
@@ -277,6 +731,7 @@
     });
     const data = await res.json();
 
+    stopSpeaking();
     document.getElementById("chat").style.display = "none";
     showResults(data.suggestions || [], data.jobOpportunities || []);
   }
@@ -304,11 +759,11 @@
       <h2>🎉 Final Interview Complete!</h2>
       <div class="result-section">
         <h3>💡 Improvement Suggestions</h3>
-        ${suggestionHTML || "<p style='color:#888; font-size:13px;'>Great performance — keep it up!</p>"}
+        ${suggestionHTML || "<p style='color:var(--text-muted); font-size:13px;'>Great performance — keep it up!</p>"}
       </div>
       <div class="result-section">
         <h3>🚀 Internship & Job Opportunities</h3>
-        ${jobsHTML || "<p style='color:#888; font-size:13px;'>Keep building your skills to unlock more opportunities.</p>"}
+        ${jobsHTML || "<p style='color:var(--text-muted); font-size:13px;'>Keep building your skills to unlock more opportunities.</p>"}
       </div>
       <a href="student-dashboard.html" class="back-btn">← Back to Dashboard</a>
     `;
@@ -321,5 +776,6 @@
     }
   });
 </script>
+
 </body>
 </html>

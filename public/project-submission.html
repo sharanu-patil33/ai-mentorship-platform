@@ -4,8 +4,6 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Project Submission</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -24,298 +22,178 @@
     --danger: #ef4444;
     --danger-light: rgba(239, 68, 68, 0.15);
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: var(--bg-gradient);
-    color: var(--text-main);
-    min-height: 100vh;
-    padding-bottom: 40px;
+  body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg-gradient); color: var(--text-main); min-height: 100vh; padding-bottom: 40px; }
+  header { background: rgba(15,23,42,0.6); backdrop-filter: blur(16px); border-bottom: 1px solid var(--card-border); padding: 18px 32px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; }
+  header h1 { font-size: 18px; font-weight: 700; }
+  a.back { color: var(--text-muted); font-size: 13px; text-decoration: none; font-weight: 500; }
+  a.back:hover { color: var(--text-main); }
+  .container { max-width: 760px; margin: 0 auto; padding: 36px 24px; }
+  .page-title { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 8px; }
+  .who { font-size: 13px; color: var(--primary); font-weight: 600; margin-bottom: 24px; }
+  .box { background: var(--card-bg); backdrop-filter: blur(16px); border: 1px solid var(--card-border); border-radius: 20px; padding: 28px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+  .box h3 { font-size: 18px; font-weight: 700; margin-bottom: 16px; letter-spacing: -0.3px; }
+  label { display: block; font-size: 13px; font-weight: 500; color: var(--text-muted); margin: 14px 0 6px; }
+  input[type=text], input[type=url], textarea, select {
+    width: 100%; padding: 12px 16px; background: rgba(15,23,42,0.6); border: 1px solid var(--card-border);
+    border-radius: 12px; font-size: 14px; color: var(--text-main); outline: none; font-family: inherit; transition: border-color 0.2s;
   }
-
-  header {
-    background: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-bottom: 1px solid var(--card-border);
-    padding: 18px 32px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: sticky;
-    top: 0;
-    z-index: 50;
-  }
-
-  header h1 {
-    font-size: 18px;
-    font-weight: 700;
-    letter-spacing: -0.3px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  a.back {
-    color: var(--text-muted);
-    font-size: 13px;
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.2s;
-  }
-
-  a.back:hover {
-    color: var(--text-main);
-  }
-
-  .container {
-    max-width: 760px;
-    margin: 0 auto;
-    padding: 36px 24px;
-  }
-
-  .page-title {
-    font-size: 26px;
-    font-weight: 700;
-    letter-spacing: -0.5px;
-    margin-bottom: 24px;
-  }
-
-  .box {
-    background: var(--card-bg);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid var(--card-border);
-    border-radius: 20px;
-    padding: 28px;
-    margin-bottom: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  }
-
-  .box h3 {
-    font-size: 18px;
-    font-weight: 700;
-    margin-bottom: 16px;
-    color: var(--text-main);
-    letter-spacing: -0.3px;
-  }
-
-  label {
-    display: block;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text-muted);
-    margin: 14px 0 6px;
-  }
-
-  input[type=text], input[type=url] {
-    width: 100%;
-    padding: 12px 16px;
-    background: rgba(15, 23, 42, 0.6);
-    border: 1px solid var(--card-border);
-    border-radius: 12px;
-    font-size: 14px;
-    color: var(--text-main);
-    outline: none;
-    font-family: inherit;
-    transition: border-color 0.2s;
-  }
-
-  input[type=text]:focus, input[type=url]:focus {
-    border-color: var(--primary);
-  }
-
-  input[type=file] {
-    width: 100%;
-    padding: 10px;
-    background: rgba(15, 23, 42, 0.6);
-    border: 1px dashed var(--card-border);
-    border-radius: 12px;
-    font-size: 13px;
-    color: var(--text-muted);
-    cursor: pointer;
-  }
-
-  input[type=file]::-webkit-file-upload-button {
-    background: var(--primary-light);
-    color: var(--primary);
-    border: 1px solid rgba(99, 102, 241, 0.3);
-    padding: 6px 14px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-    margin-right: 12px;
-  }
-
-  button {
-    background: var(--primary);
-    color: #fff;
-    border: none;
-    padding: 14px 28px;
-    border-radius: 12px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    margin-top: 8px;
-  }
-
-  button:hover:not(:disabled) {
-    background: var(--primary-hover);
-    transform: translateY(-1px);
-  }
-
-  button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .msg {
-    font-size: 13px;
-    margin-top: 14px;
-    text-align: center;
-    font-weight: 500;
-  }
-
-  .err { color: var(--danger); } 
-  .ok { color: var(--success); }
-
-  .badge {
-    display: inline-block;
-    font-size: 11px;
-    font-weight: 600;
-    padding: 4px 12px;
-    border-radius: 20px;
-    margin-bottom: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-  }
-
-  .submitted {
-    background: var(--warning-light);
-    color: var(--warning);
-    border: 1px solid rgba(245, 158, 11, 0.3);
-  }
-
-  .approved {
-    background: var(--success-light);
-    color: var(--success);
-    border: 1px solid rgba(16, 185, 129, 0.3);
-  }
-
-  .changes_requested {
-    background: var(--danger-light);
-    color: var(--danger);
-    border: 1px solid rgba(239, 68, 68, 0.3);
-  }
-
-  .box a {
-    color: var(--primary);
-    text-decoration: none;
-    word-break: break-all;
-  }
-
-  .box a:hover {
-    text-decoration: underline;
-  }
-
-  .feedback-box {
-    margin-top: 12px;
-    padding: 12px 16px;
-    background: rgba(255, 255, 255, 0.03);
-    border-left: 3px solid var(--primary);
-    border-radius: 0 8px 8px 0;
-    font-size: 13px;
-    color: var(--text-muted);
-  }
+  input:focus, textarea:focus, select:focus { border-color: var(--primary); }
+  select option { background: #1e293b; }
+  textarea { resize: vertical; min-height: 80px; }
+  button { background: var(--primary); color: #fff; border: none; padding: 14px 28px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; width: 100%; margin-top: 8px; font-family: inherit; }
+  button:hover:not(:disabled) { background: var(--primary-hover); transform: translateY(-1px); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .msg { font-size: 13px; margin-top: 14px; text-align: center; font-weight: 500; }
+  .err { color: var(--danger); } .ok { color: var(--success); }
+  .badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 20px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.4px; }
+  .submitted { background: var(--warning-light); color: var(--warning); border: 1px solid rgba(245,158,11,0.3); }
+  .approved { background: var(--success-light); color: var(--success); border: 1px solid rgba(16,185,129,0.3); }
+  .needs_revision { background: var(--danger-light); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
+  .under_review { background: var(--primary-light); color: var(--primary); border: 1px solid rgba(99,102,241,0.3); }
+  .box a { color: var(--primary); text-decoration: none; word-break: break-all; }
+  .box a:hover { text-decoration: underline; }
+  .feedback-box { margin-top: 12px; padding: 12px 16px; background: rgba(255,255,255,0.03); border-left: 3px solid var(--primary); border-radius: 0 8px 8px 0; font-size: 13px; color: var(--text-muted); }
+  .tech-pill { display: inline-block; font-size: 11px; padding: 2px 8px; background: var(--primary-light); color: var(--primary); border-radius: 6px; margin: 2px; }
 </style>
 </head>
 <body>
-
 <header>
   <h1>🗂️ Project Submission</h1>
   <a class="back" href="student-dashboard.html">← Back to Dashboard</a>
 </header>
-
 <div class="container">
   <div class="page-title">Submit Program Projects</div>
+  <div class="who" id="who"></div>
   <div id="content" style="color: var(--text-muted); font-size: 14px;">Loading...</div>
 </div>
-
 <script>
   const API_BASE = "http://localhost:3000/api";
   const studentId = localStorage.getItem("studentId");
   if (!studentId) window.location.href = "auth.html";
 
   const content = document.getElementById("content");
-  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+  let programs = [];
+
+  const fileToBase64 = (file) => new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result).split(",")[1]);
+    r.onerror = () => reject(new Error("Could not read the file"));
+    r.readAsDataURL(file);
+  });
 
   async function load() {
-    const res = await fetch(`${API_BASE}/student/${studentId}/submissions`);
-    const { programs } = await res.json();
+    // Load enrolled programs (also verifies this studentId really exists)
+    const dashRes = await fetch(`${API_BASE}/student/${studentId}/dashboard`);
+    if (dashRes.status === 404) {
+      localStorage.removeItem("studentId");
+      window.location.href = "auth.html";
+      return;
+    }
+    const dashData = await dashRes.json();
+    programs = dashData.programs || [];
 
-    if (programs.length !== 2) {
-      content.innerHTML = "<p>Enroll in 2 programs first.</p>";
+    if (dashData.student) {
+      document.getElementById("who").textContent =
+        "Submitting as " + dashData.student.name + " (" + dashData.student.email + ")";
+    }
+
+    // Load this student's submissions
+    const projRes = await fetch(`${API_BASE}/student/${studentId}/projects`);
+    const projData = await projRes.json();
+    const submissions = projData.projects || [];
+
+    if (programs.length === 0) {
+      content.innerHTML = "<p>Please enroll in programs first before submitting projects.</p>";
       return;
     }
 
-    const allSubmitted = programs.every((p) => p.submission);
-    const canEdit = !allSubmitted || programs.some((p) => p.submission.status === "changes_requested");
-
-    // Read-only status view
     let html = "";
-    if (allSubmitted) {
-      html += programs.map((p) => `
-        <div class="box">
-          <h3>${esc(p.programName)}</h3>
-          <span class="badge ${p.submission.status}">${p.submission.status.replace("_", " ")}</span>
-          <p style="font-size:13px; color:var(--text-muted); margin-bottom:6px;"><b>PDF:</b> ${esc(p.submission.pdf_name)}</p>
-          <p style="font-size:13px; color:var(--text-muted);"><b>Repo:</b> <a href="${esc(p.submission.repo_url)}" target="_blank" rel="noopener">${esc(p.submission.repo_url)}</a></p>
-          ${p.submission.mentor_feedback ? `<div class="feedback-box"><b>Mentor feedback:</b> ${esc(p.submission.mentor_feedback)}</div>` : ""}
-        </div>`).join("");
+
+    if (submissions.length > 0) {
+      html += `<div class="box"><h3>My Submissions</h3>`;
+      submissions.forEach(s => {
+        const programName = s.student_programs?.programs?.name || "Project";
+        const status = s.status || "submitted";
+        const when = s.submitted_at || s.created_at;
+        html += `
+          <div style="border-top: 1px solid var(--card-border); padding-top: 14px; margin-top: 14px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <b style="font-size:15px;">${esc(programName)}</b>
+              <span class="badge ${esc(status)}">${esc(status.replace(/_/g, " "))}</span>
+            </div>
+            ${s.repo_url ? `<p style="font-size:13px; margin-bottom:6px;"><b>Repo:</b> <a href="${esc(s.repo_url)}" target="_blank" rel="noopener">${esc(s.repo_url)}</a></p>` : ""}
+            ${s.pdf_url ? `<p style="font-size:13px; margin-bottom:6px;"><b>PDF:</b> <a href="${esc(s.pdf_url)}" target="_blank" rel="noopener">${esc(s.pdf_name || "View PDF")}</a></p>` : ""}
+            ${when ? `<p style="font-size:12px; color:var(--text-muted);">Submitted: ${new Date(when).toLocaleString()}</p>` : ""}
+            ${s.mentor_feedback ? `<div class="feedback-box"><b>Mentor feedback:</b> ${esc(s.mentor_feedback)}</div>` : ""}
+          </div>`;
+      });
+      html += `</div>`;
     }
-    if (!canEdit) { content.innerHTML = html; return; }
 
-    // Upload form
-    html += `<form id="form">` + programs.map((p, i) => `
+    html += `
       <div class="box">
-        <h3>${esc(p.programName)}</h3>
-        <input type="hidden" name="studentProgramId_${i + 1}" value="${esc(p.studentProgramId)}" />
-        <label>Course PDF (max 10 MB)</label>
-        <input type="file" name="pdf_${i + 1}" accept="application/pdf" required />
-        <label>Project repository link</label>
-        <input type="url" name="repoUrl_${i + 1}" placeholder="https://github.com/you/project" required />
-      </div>`).join("") +
-      `<button type="submit" id="submitBtn">${allSubmitted ? "Resubmit" : "Submit Projects"}</button>
-       <p class="msg" id="msg"></p></form>`;
-    content.innerHTML = html;
+        <h3>${submissions.length > 0 ? "Submit Another Project" : "Submit a Project"}</h3>
+        <label>Program</label>
+        <select id="programSelect">
+          <option value="">Select a program...</option>
+          ${programs.map(p => `<option value="${esc(p.studentProgramId)}">${esc(p.programName)}</option>`).join("")}
+        </select>
+        <label>GitHub Repository URL</label>
+        <input type="url" id="repoUrl" placeholder="https://github.com/username/project" />
+        <label>Project PDF (optional, max 10 MB)</label>
+        <input type="file" id="pdfFile" accept="application/pdf" />
+        <button id="submitBtn" onclick="submitProject()">Submit Project</button>
+        <p class="msg" id="msg"></p>
+      </div>`;
 
-    document.getElementById("form").addEventListener("submit", onSubmit);
+    content.innerHTML = html;
   }
 
-  async function onSubmit(e) {
-    e.preventDefault();
-    const btn = document.getElementById("submitBtn");
+  async function submitProject() {
+    const studentProgramId = document.getElementById("programSelect").value;
+    const repoUrl = document.getElementById("repoUrl").value.trim();
+    const file = document.getElementById("pdfFile").files[0];
     const msg = document.getElementById("msg");
-    btn.disabled = true; msg.className = "msg"; msg.textContent = "Uploading...";
+    const btn = document.getElementById("submitBtn");
+
+    if (!studentProgramId || !repoUrl) {
+      msg.className = "msg err"; msg.textContent = "Please select a program and enter the GitHub repository URL."; return;
+    }
+    if (file && file.type !== "application/pdf") {
+      msg.className = "msg err"; msg.textContent = "Only PDF files are allowed."; return;
+    }
+    if (file && file.size > 10 * 1024 * 1024) {
+      msg.className = "msg err"; msg.textContent = "PDF must be 10 MB or smaller."; return;
+    }
+
+    btn.disabled = true; msg.className = "msg"; msg.textContent = "Submitting...";
 
     try {
-      const res = await fetch(`${API_BASE}/student/${studentId}/submissions`, {
+      const body = { studentProgramId, repoUrl };
+      if (file) {
+        body.pdfName = file.name;
+        body.pdfBase64 = await fileToBase64(file);
+      }
+
+      const res = await fetch(`${API_BASE}/student/${studentId}/submit-project`, {
         method: "POST",
-        body: new FormData(e.target), // browser sets multipart headers itself
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Submission failed");
-      msg.className = "msg ok"; msg.textContent = "Submitted!";
-      setTimeout(load, 800);
-    } catch (err) {
-      msg.className = "msg err"; msg.textContent = err.message;
+
+      if (!res.ok || data.error) {
+        msg.className = "msg err"; msg.textContent = data.error || "Submission failed.";
+        btn.disabled = false; return;
+      }
+
+      msg.className = "msg ok"; msg.textContent = "Project submitted successfully! Your mentor will review it.";
+      setTimeout(load, 1000);
+    } catch (e) {
+      msg.className = "msg err"; msg.textContent = e.message || "Could not reach the server.";
       btn.disabled = false;
     }
   }

@@ -324,27 +324,36 @@
     window.location.href = "auth.html";
   }
 
-  async function loadDashboard() {
-    const interviewRes = await fetch(`${API_BASE}/student/${studentId}/interview-status`);
+    async function loadDashboard() {
+    const [interviewRes, dashRes, projRes, finalRes] = await Promise.all([
+      fetch(`${API_BASE}/student/${studentId}/interview-status`),
+      fetch(`${API_BASE}/student/${studentId}/dashboard`),
+      fetch(`${API_BASE}/student/${studentId}/projects`),
+      fetch(`${API_BASE}/final-interview/${studentId}/result`),
+    ]);
+
     const interviewData = await interviewRes.json();
+    const dashData = await dashRes.json();
+    const projData = await projRes.json();
+    const finalData = await finalRes.json();
+
     const hasInterview = interviewData.hasCompletedInterview;
     const sessionId = interviewData.sessionId;
-
-    const dashRes = await fetch(`${API_BASE}/student/${studentId}/dashboard`);
-    const dashData = await dashRes.json();
     const hasPrograms = dashData.programs && dashData.programs.length > 0;
     const completedConcepts = hasPrograms && dashData.programs.every(p => p.status === "completed");
+    const projects = projData.projects || [];
+    const hasProjects = projects.length > 0;
+    const approvedProjects = projects.filter(p => p.status === "approved").length;
+    const hasFinalInterview = finalData.exists;
 
-    if (hasInterview) markStep("step1", "done");
-    else markStep("step1", "active");
+    if (hasInterview) markStep("step1", "done"); else markStep("step1", "active");
+    if (hasPrograms) markStep("step2", "done"); else if (hasInterview) markStep("step2", "active");
+    if (hasPrograms) markStep("step3", completedConcepts ? "done" : "active");
+    if (hasProjects) markStep("step4", approvedProjects >= 2 ? "done" : "active"); else if (hasPrograms) markStep("step4", "active");
+    if (hasFinalInterview) markStep("step5", "done"); else if (hasProjects) markStep("step5", "active");
+    if (hasFinalInterview) markStep("step6", "active");
 
-    if (hasPrograms) markStep("step2", "done");
-    else if (hasInterview) markStep("step2", "active");
-
-    if (hasPrograms) markStep("step3", "active");
-    if (completedConcepts) markStep("step4", "active");
-
-    renderCards(hasInterview, hasPrograms, dashData, sessionId);
+    renderCards(hasInterview, hasPrograms, dashData, sessionId, projects, hasFinalInterview);
   }
 
   function markStep(id, state) {
@@ -352,38 +361,34 @@
     el.className = "step " + (state === "done" ? "done" : state === "active" ? "active" : "");
   }
 
-  function renderCards(hasInterview, hasPrograms, data, sessionId) {
+  function renderCards(hasInterview, hasPrograms, data, sessionId, projects, hasFinalInterview) {
     const grid = document.getElementById("cardsGrid");
+    const hasProjects = projects.length > 0;
+    const approvedCount = projects.filter(p => p.status === "approved").length;
 
     const cards = [
       {
         icon: "🎙️",
         title: "AI Interview",
-        desc: hasInterview
-          ? "You've completed your initial interview. View your performance summary."
-          : "Start your first AI-powered viva to assess your current knowledge.",
+        desc: hasInterview ? "Initial interview completed." : "Start your AI-powered viva to assess your knowledge.",
         status: hasInterview ? "done" : "active",
-        statusLabel: hasInterview ? "Completed" : "Start Now",
+        statusLabel: hasInterview ? "✓ Completed" : "Start Now",
         href: "index.html",
         locked: false,
       },
       {
         icon: "📚",
         title: "Choose Programs",
-        desc: hasPrograms
-          ? `Enrolled in: ${data.programs.map(p => p.programName).join(", ")}`
-          : "Pick 2 programs based on your interview results.",
+        desc: hasPrograms ? `Enrolled in: ${data.programs.map(p => p.programName).join(", ")}` : "Pick 2 programs based on your interview results.",
         status: hasPrograms ? "done" : hasInterview ? "pending" : "locked",
-        statusLabel: hasPrograms ? "Enrolled" : hasInterview ? "Choose Now" : "Complete interview first",
+        statusLabel: hasPrograms ? "✓ Enrolled" : hasInterview ? "Choose Now" : "Complete interview first",
         href: hasInterview && !hasPrograms ? `programs.html?sessionId=${sessionId}&studentId=${studentId}` : "#",
         locked: !hasInterview || hasPrograms,
       },
       {
         icon: "📈",
         title: "My Progress",
-        desc: hasPrograms
-          ? `Track your concept progress across your enrolled programs.`
-          : "Enroll in programs first to track your progress.",
+        desc: hasPrograms ? "Track your concept progress across your enrolled programs." : "Enroll in programs first.",
         status: hasPrograms ? "pending" : "locked",
         statusLabel: hasPrograms ? "View Progress" : "Locked",
         href: "dashboard.html",
@@ -401,20 +406,20 @@
       {
         icon: "🗂️",
         title: "Project Submission",
-        desc: "Submit your program projects for mentor review.",
-        status: hasPrograms ? "active" : "locked",
-        statusLabel: hasPrograms ? "Submit Project" : "Locked",
+        desc: hasProjects ? `${projects.length} submitted · ${approvedCount} approved` : "Submit your program projects for mentor review.",
+        status: approvedCount >= 2 ? "done" : hasProjects ? "pending" : hasPrograms ? "active" : "locked",
+        statusLabel: approvedCount >= 2 ? "✓ Both Approved" : hasProjects ? `${approvedCount}/2 Approved` : hasPrograms ? "Submit Project" : "Locked",
         href: "project-submission.html",
         locked: !hasPrograms,
       },
       {
         icon: "🎯",
         title: "Final Interview",
-        desc: "Resume-based viva — questions drawn from your projects, skills and programs.",
-        status: hasPrograms ? "active" : "locked",
-        statusLabel: hasPrograms ? "Start Final Viva" : "Complete programs first",
+        desc: hasFinalInterview ? "Final interview completed! Check your results." : "Resume-based viva — questions drawn from your projects and skills.",
+        status: hasFinalInterview ? "done" : hasProjects ? "active" : "locked",
+        statusLabel: hasFinalInterview ? "✓ Completed" : hasProjects ? "Start Final Viva" : "Submit projects first",
         href: "final-interview.html",
-        locked: !hasPrograms,
+        locked: !hasProjects,
       },
       {
         icon: "📄",

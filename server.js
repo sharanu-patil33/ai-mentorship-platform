@@ -9,7 +9,7 @@ import { rebuildState } from "./interview/stateManager.js";
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "15mb" }));
 app.use(express.static("public"));
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
@@ -429,31 +429,89 @@ app.get("/api/mentor/students", async (req, res) => {
   }
 });
 
+// ---- Project submissions (matches table: id, student_id, student_program_id, repo_url, pdf_path, pdf_name, status, mentor_feedback, reviewed_by) ----
+const PDF_BUCKET = "project-pdfs";
+
+// Adds student name/email, program name and a public PDF link to each submission row.
+// Names come strictly from each row's own student_id.
+async function attachDetails(rows) {
+  const studentIds = [...new Set(rows.map((r) => r.student_id).filter(Boolean))];
+  const spIds = [...new Set(rows.map((r) => r.student_program_id).filter(Boolean))];
+
+  const { data: students } = studentIds.length
+    ? await supabase.from("students").select("id, name, email").in("id", studentIds)
+    : { data: [] };
+  const { data: sps } = spIds.length
+    ? await supabase.from("student_programs").select("id, programs(name)").in("id", spIds)
+    : { data: [] };
+
+  const studentMap = Object.fromEntries((students || []).map((s) => [s.id, s]));
+  const spMap = Object.fromEntries((sps || []).map((s) => [s.id, s]));
+
+  return rows.map((r) => ({
+    ...r,
+    students: studentMap[r.student_id] || null,
+    student_programs: spMap[r.student_program_id] || null,
+    pdf_url: r.pdf_path ? supabase.storage.from(PDF_BUCKET).getPublicUrl(r.pdf_path).data.publicUrl : null,
+  }));
+}
+
 // Student: get project submissions
 app.get("/api/student/:studentId/projects", async (req, res) => {
   try {
     const { studentId } = req.params;
     const { data, error } = await supabase
       .from("project_submissions")
-      .select("*, student_programs(id, programs(name))")
+      .select("*")
       .eq("student_id", studentId)
-      .order("submitted_at", { ascending: false });
+      .order("id", { ascending: false });
 
     if (error) throw error;
-    res.json({ projects: data || [] });
+    res.json({ projects: await attachDetails(data || []) });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// Student: submit a project
+// Student: submit a project (repo URL + optional PDF)
 app.post("/api/student/:studentId/submit-project", async (req, res) => {
   try {
     const { studentId } = req.params;
-    const { studentProgramId, title, description, techStack, repoUrl, demoUrl } = req.body;
+    const { studentProgramId, repoUrl, pdfName, pdfBase64 } = req.body;
 
-    if (!title || !studentProgramId) {
-      return res.status(400).json({ error: "title and studentProgramId are required" });
+    if (!studentProgramId || !repoUrl) {
+      return res.status(400).json({ error: "studentProgramId and repoUrl are required" });
+    }
+
+    // The chosen program enrollment must belong to this student
+    const { data: owned, error: ownedError } = await supabase
+      .from("student_programs").select("id")
+      .eq("id", studentProgramId).eq("student_id", studentId).maybeSingle();
+
+    if (ownedError) throw ownedError;
+    if (!owned) {
+      return res.status(403).json({ error: "This program does not belong to the logged-in student. Please log in again." });
+    }
+
+    let pdfPath = null;
+    let savedName = null;
+
+    if (pdfBase64) {
+      const buffer = Buffer.from(pdfBase64, "base64");
+      if (buffer.length > 10 * 1024 * 1024) {
+        return res.status(400).json({ error: "PDF must be 10 MB or smaller" });
+      }
+      if (buffer.subarray(0, 4).toString() !== "%PDF") {
+        return res.status(400).json({ error: "File is not a valid PDF" });
+      }
+      savedName = String(pdfName || "project.pdf").replace(/[^\w.\-]/g, "_");
+      pdfPath = `${studentId}/${Date.now()}_${savedName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from(PDF_BUCKET)
+        .upload(pdfPath, buffer, { contentType: "application/pdf", upsert: false });
+      if (uploadError) throw uploadError;
     }
 
     const { data, error } = await supabase
@@ -461,11 +519,9 @@ app.post("/api/student/:studentId/submit-project", async (req, res) => {
       .insert({
         student_id: studentId,
         student_program_id: studentProgramId,
-        title,
-        description,
-        tech_stack: techStack || [],
-        repo_url: repoUrl || null,
-        demo_url: demoUrl || null,
+        repo_url: repoUrl,
+        pdf_path: pdfPath,
+        pdf_name: savedName,
         status: "submitted",
       })
       .select().single();
@@ -478,16 +534,24 @@ app.post("/api/student/:studentId/submit-project", async (req, res) => {
   }
 });
 
-// Mentor: get all project submissions
+// Mentor: get all project submissions (optional filters: ?studentId=  or  ?email=)
 app.get("/api/mentor/submissions", async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from("project_submissions")
-      .select("*, students(name, email), student_programs(programs(name))")
-      .order("submitted_at", { ascending: false });
+    const { studentId, email } = req.query;
+    let studentFilterId = studentId || null;
 
+    if (!studentFilterId && email) {
+      const { data: st } = await supabase.from("students").select("id").eq("email", email).maybeSingle();
+      if (!st) return res.json({ submissions: [] });
+      studentFilterId = st.id;
+    }
+
+    let query = supabase.from("project_submissions").select("*").order("id", { ascending: false });
+    if (studentFilterId) query = query.eq("student_id", studentFilterId);
+
+    const { data, error } = await query;
     if (error) throw error;
-    res.json({ submissions: data || [] });
+    res.json({ submissions: await attachDetails(data || []) });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
@@ -498,12 +562,19 @@ app.get("/api/mentor/submissions", async (req, res) => {
 app.patch("/api/mentor/submissions/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, mentor_feedback } = req.body;
+    const { status, mentor_feedback, mentorId } = req.body;
+
+    const updates = {};
+    if (status) updates.status = status;
+    if (mentor_feedback !== undefined) updates.mentor_feedback = mentor_feedback;
+    if (mentorId) updates.reviewed_by = mentorId;
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ error: "Nothing to update" });
+    }
 
     const { data, error } = await supabase
-      .from("project_submissions")
-      .update({ status, mentor_feedback, reviewed_at: new Date() })
-      .eq("id", id).select().single();
+      .from("project_submissions").update(updates).eq("id", id).select().single();
 
     if (error) throw error;
     res.json({ success: true, submission: data });
