@@ -4,115 +4,235 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>My Progress</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  * { box-sizing: border-box; }
+  :root {
+    --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+    --card-bg: rgba(30, 41, 59, 0.7);
+    --card-border: rgba(255, 255, 255, 0.08);
+    --primary: #6366f1;
+    --primary-hover: #4f46e5;
+    --primary-light: rgba(99, 102, 241, 0.15);
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --success: #10b981;
+    --success-light: rgba(16, 185, 129, 0.15);
+    --warning: #f59e0b;
+    --warning-light: rgba(245, 158, 11, 0.15);
+    --danger: #ef4444;
+    --danger-light: rgba(239, 68, 68, 0.15);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    background: #f5f5f7;
-    margin: 0;
-    padding: 24px;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-gradient);
+    color: var(--text-main);
+    min-height: 100vh;
+    padding-bottom: 40px;
   }
-  .app {
-    max-width: 720px;
-    margin: 0 auto;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-    padding: 24px;
-  }
-  h1 { margin-top: 0; font-size: 20px; }
-  #loadRow {
+
+  header {
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--card-border);
+    padding: 18px 32px;
     display: flex;
-    gap: 8px;
-    margin-bottom: 20px;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 50;
   }
-  #loadRow input {
-    flex: 1;
-    padding: 10px 12px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    font-size: 14px;
+
+  header h1 {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
   }
-  #loadRow button {
-    padding: 10px 16px;
-    background: #111;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
+
+  header a {
+    color: var(--text-muted);
+    font-size: 13px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
   }
+
+  header a:hover {
+    color: var(--text-main);
+  }
+
+  .container {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 36px 24px;
+  }
+
   .student-header {
-    padding: 12px 16px;
-    background: #fafafa;
-    border-radius: 8px;
-    margin-bottom: 20px;
+    padding: 20px 24px;
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid var(--card-border);
+    border-radius: 18px;
+    margin-bottom: 28px;
+    font-size: 15px;
+    color: var(--text-muted);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
   }
+
+  .student-header strong {
+    color: var(--text-main);
+    font-size: 17px;
+    letter-spacing: -0.2px;
+  }
+
   .program-block {
-    border: 1px solid #eee;
-    border-radius: 10px;
-    padding: 16px;
-    margin-bottom: 16px;
+    background: var(--card-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    padding: 28px;
+    margin-bottom: 24px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   }
+
   .program-title-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 4px;
+    margin-bottom: 8px;
   }
-  .program-title-row h3 { margin: 0; }
-  .progress-fraction { font-size: 13px; color: #666; }
+
+  .program-title-row h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-main);
+    letter-spacing: -0.3px;
+  }
+
+  .progress-fraction {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--primary);
+  }
+
   .progress-bar-track {
     width: 100%;
-    height: 6px;
-    background: #eee;
-    border-radius: 3px;
+    height: 8px;
+    background: rgba(15, 23, 42, 0.8);
+    border-radius: 20px;
     overflow: hidden;
-    margin: 8px 0 14px;
+    margin: 10px 0 18px;
+    border: 1px solid var(--card-border);
   }
+
   .progress-bar-fill {
     height: 100%;
-    background: #111;
+    background: linear-gradient(90deg, var(--primary) 0%, #818cf8 100%);
+    border-radius: 20px;
+    transition: width 0.4s ease;
   }
+
   .concept-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 0;
-    border-top: 1px solid #f5f5f5;
-    gap: 10px;
+    padding: 12px 0;
+    border-top: 1px solid var(--card-border);
+    gap: 12px;
   }
-  .concept-row:first-of-type { border-top: none; }
-  .concept-name { font-size: 14px; }
+
+  .concept-row:first-of-type {
+    border-top: none;
+  }
+
+  .concept-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-main);
+  }
+
   .status-pill {
     font-size: 11px;
-    padding: 2px 10px;
-    border-radius: 10px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 20px;
     white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
   }
-  .status-pill.not_started { background: #f1f3f5; color: #868e96; }
-  .status-pill.in_progress { background: #fff3bf; color: #e67700; }
-  .status-pill.completed { background: #d3f9d8; color: #2b8a3e; }
-  .status-pill.needs_review { background: #ffe3e3; color: #c92a2a; }
+
+  .status-pill.not_started {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-muted);
+    border: 1px solid var(--card-border);
+  }
+
+  .status-pill.in_progress {
+    background: var(--warning-light);
+    color: var(--warning);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+  }
+
+  .status-pill.completed {
+    background: var(--success-light);
+    color: var(--success);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+  }
+
+  .status-pill.needs_review {
+    background: var(--danger-light);
+    color: var(--danger);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+  }
+
   .concept-notes {
     font-size: 12px;
-    color: #888;
-    margin-top: 2px;
+    color: var(--text-muted);
+    margin-top: 4px;
     font-style: italic;
+    background: rgba(15, 23, 42, 0.4);
+    padding: 6px 12px;
+    border-radius: 8px;
+    border-left: 2px solid var(--primary);
+    display: inline-block;
   }
-  .error { color: #e03131; font-size: 14px; }
+
+  .error {
+    color: var(--danger);
+    font-size: 14px;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    padding: 16px;
+    border-radius: 12px;
+  }
 </style>
 </head>
 <body>
 
-<div class="app">
-  <h1>My Progress</h1>
-  <div id="result"></div>
+<header>
+  <h1>📈 My Progress</h1>
+  <a href="student-dashboard.html">← Back to Dashboard</a>
+</header>
+
+<div class="container">
+  <div id="result" style="color: var(--text-muted); font-size: 14px;">Loading progress...</div>
 </div>
 
 <script>
   const API_BASE = "http://localhost:3000/api";
 
-  // Prefer the logged-in session; fall back to a studentId in the URL (used by the direct link after program selection)
+  // Prefer the logged-in session; fall back to a studentId in the URL
   const params = new URLSearchParams(window.location.search);
   const loggedInStudentId = localStorage.getItem("studentId");
   const studentIdToLoad = loggedInStudentId || params.get("studentId");
@@ -125,7 +245,7 @@
 
   async function loadDashboardById(studentId) {
     const resultEl = document.getElementById("result");
-    resultEl.innerHTML = "<p>Loading...</p>";
+    resultEl.innerHTML = "<p>Loading dashboard details...</p>";
 
     const res = await fetch(`${API_BASE}/student/${studentId}/dashboard`);
     const data = await res.json();
@@ -152,7 +272,7 @@
     `;
 
     if (!data.programs.length) {
-      resultEl.innerHTML = header + "<p>You haven't selected any programs yet.</p>";
+      resultEl.innerHTML = header + "<p style='color:var(--text-muted);'>You haven't selected any programs yet.</p>";
       return;
     }
 

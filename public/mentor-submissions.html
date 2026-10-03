@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Project Submissions – Mentor</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+    --card-bg: rgba(30, 41, 59, 0.7);
+    --card-border: rgba(255, 255, 255, 0.08);
+    --primary: #6366f1;
+    --primary-light: rgba(99, 102, 241, 0.15);
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --success: #10b981;
+    --success-hover: #059669;
+    --success-light: rgba(16, 185, 129, 0.15);
+    --warning: #f59e0b;
+    --warning-hover: #d97706;
+    --warning-light: rgba(245, 158, 11, 0.15);
+    --danger: #ef4444;
+    --danger-light: rgba(239, 68, 68, 0.15);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg-gradient); color: var(--text-main); min-height: 100vh; padding-bottom: 40px; }
+  header { background: rgba(15,23,42,0.6); backdrop-filter: blur(16px); border-bottom: 1px solid var(--card-border); padding: 18px 32px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; }
+  header h1 { font-size: 18px; font-weight: 700; }
+  a.back { color: var(--text-muted); font-size: 13px; text-decoration: none; font-weight: 500; }
+  a.back:hover { color: var(--text-main); }
+  .container { max-width: 860px; margin: 0 auto; padding: 36px 24px; }
+  .mentor-badge { font-size: 13px; color: var(--primary); font-weight: 600; margin-bottom: 16px; background: var(--primary-light); padding: 4px 12px; border-radius: 20px; display: inline-block; border: 1px solid rgba(99,102,241,0.3); }
+  .page-title { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 24px; }
+  .filters { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+  .filters input, .filters select { flex: 1; min-width: 180px; padding: 12px 16px; background: rgba(15,23,42,0.6); border: 1px solid var(--card-border); border-radius: 12px; font-family: inherit; font-size: 13px; color: var(--text-main); outline: none; }
+  .filters input:focus, .filters select:focus { border-color: var(--primary); }
+  .filters select option { background: #1e293b; }
+  .count { font-size: 13px; color: var(--text-muted); margin-bottom: 14px; }
+  .card { background: var(--card-bg); backdrop-filter: blur(16px); border: 1px solid var(--card-border); border-radius: 20px; padding: 24px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+  .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; flex-wrap: wrap; gap: 10px; }
+  .student-name { font-size: 16px; font-weight: 700; margin-bottom: 2px; }
+  .student-email { font-size: 13px; color: var(--text-muted); }
+  .program-tag { font-size: 12px; color: var(--primary); font-weight: 600; margin-top: 4px; }
+  .badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.4px; }
+  .submitted { background: var(--warning-light); color: var(--warning); border: 1px solid rgba(245,158,11,0.3); }
+  .approved { background: var(--success-light); color: var(--success); border: 1px solid rgba(16,185,129,0.3); }
+  .needs_revision { background: var(--danger-light); color: var(--danger); border: 1px solid rgba(239,68,68,0.3); }
+  .under_review { background: var(--primary-light); color: var(--primary); border: 1px solid rgba(99,102,241,0.3); }
+  .row { font-size: 13px; color: var(--text-muted); margin: 8px 0; line-height: 1.5; }
+  .row a { color: var(--primary); text-decoration: none; word-break: break-all; }
+  .row a:hover { text-decoration: underline; }
+  .tech-pill { display: inline-block; font-size: 11px; padding: 2px 8px; background: var(--primary-light); color: var(--primary); border-radius: 6px; margin: 2px; }
+  textarea { width: 100%; padding: 12px 16px; background: rgba(15,23,42,0.6); border: 1px solid var(--card-border); border-radius: 12px; margin: 14px 0; font-family: inherit; font-size: 13px; color: var(--text-main); outline: none; resize: vertical; transition: border-color 0.2s; }
+  textarea:focus { border-color: var(--primary); }
+  textarea::placeholder { color: #64748b; }
+  .actions { display: flex; gap: 10px; }
+  button { border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600; font-family: inherit; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+  .approve { background: var(--success); color: #fff; }
+  .approve:hover { background: var(--success-hover); transform: translateY(-1px); }
+  .revision { background: var(--warning); color: #fff; }
+  .revision:hover { background: var(--warning-hover); transform: translateY(-1px); }
+  .empty { color: var(--text-muted); font-size: 14px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🗂️ Project Submissions</h1>
+  <a class="back" href="mentor-dashboard.html">← Back to Mentor Dashboard</a>
+</header>
+<div class="container">
+  <div class="mentor-badge" id="mentorBadge"></div>
+  <div class="page-title" style="margin-top:12px;">Student Projects for Review</div>
+
+  <div class="filters">
+    <input type="text" id="searchInput" placeholder="Search by student name or email..." oninput="applyFilters()" />
+    <select id="statusFilter" onchange="applyFilters()">
+      <option value="">All statuses</option>
+      <option value="submitted">Submitted</option>
+      <option value="under_review">Under review</option>
+      <option value="approved">Approved</option>
+      <option value="needs_revision">Needs revision</option>
+    </select>
+  </div>
+  <div class="count" id="count"></div>
+
+  <div id="list" class="empty">Loading...</div>
+</div>
+<script>
+  const API_BASE = "http://localhost:3000/api";
+  const mentorId = localStorage.getItem("mentorId");
+  if (!mentorId) window.location.href = "mentor-auth.html";
+
+  document.getElementById("mentorBadge").textContent = "Reviewing as " + (localStorage.getItem("mentorName") || "Mentor");
+
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+  let allSubmissions = [];
+
+  // When opened from a student's card: mentor-submissions.html?studentId=<id>
+  const filterStudentId = new URLSearchParams(window.location.search).get("studentId");
+
+  async function load() {
+    const url = filterStudentId
+      ? `${API_BASE}/mentor/submissions?studentId=${encodeURIComponent(filterStudentId)}`
+      : `${API_BASE}/mentor/submissions`;
+    const res = await fetch(url);
+    const data = await res.json();
+    allSubmissions = data.submissions || [];
+
+    if (filterStudentId) {
+      const name = allSubmissions[0]?.students?.name;
+      document.querySelector(".page-title").textContent = name ? `Projects by ${name}` : "Projects by this student";
+      if (!document.getElementById("showAll")) {
+        document.querySelector(".filters").insertAdjacentHTML("beforebegin",
+          '<p id="showAll" style="margin-bottom:16px;"><a class="back" href="mentor-submissions.html">← Show all students\' submissions</a></p>');
+      }
+    }
+    applyFilters();
+  }
+
+  function applyFilters() {
+    const q = document.getElementById("searchInput").value.trim().toLowerCase();
+    const status = document.getElementById("statusFilter").value;
+
+    const filtered = allSubmissions.filter(s => {
+      const name = (s.students?.name || "").toLowerCase();
+      const email = (s.students?.email || "").toLowerCase();
+      const matchesText = !q || name.includes(q) || email.includes(q);
+      const matchesStatus = !status || (s.status || "submitted") === status;
+      return matchesText && matchesStatus;
+    });
+
+    render(filtered);
+  }
+
+  function render(submissions) {
+    // Keep feedback the mentor is currently typing
+    const drafts = {};
+    document.querySelectorAll("textarea[id^='fb-']").forEach(t => { drafts[t.id] = t.value; });
+
+    document.getElementById("count").textContent =
+      submissions.length + " submission" + (submissions.length === 1 ? "" : "s");
+
+    if (!submissions.length) {
+      document.getElementById("list").innerHTML = "<p>No submissions found.</p>";
+      return;
+    }
+
+    document.getElementById("list").innerHTML = submissions.map(s => {
+      const studentName = s.students?.name || "Unknown";
+      const studentEmail = s.students?.email || "";
+      const programName = s.student_programs?.programs?.name || "";
+      const status = s.status || "submitted";
+      const when = s.submitted_at || s.created_at;
+      const feedbackValue = drafts[`fb-${s.id}`] !== undefined ? drafts[`fb-${s.id}`] : (s.mentor_feedback || "");
+
+      return `
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="student-name">${esc(studentName)}</div>
+              <div class="student-email">${esc(studentEmail)}</div>
+              ${programName ? `<div class="program-tag">${esc(programName)} Program</div>` : ""}
+            </div>
+            <span class="badge ${esc(status)}">${esc(status.replace(/_/g, " "))}</span>
+          </div>
+          ${s.repo_url ? `<div class="row"><b>Repo:</b> <a href="${esc(s.repo_url)}" target="_blank" rel="noopener">${esc(s.repo_url)}</a></div>` : ""}
+          ${s.pdf_url ? `<div class="row"><b>PDF:</b> <a href="${esc(s.pdf_url)}" target="_blank" rel="noopener">${esc(s.pdf_name || "View PDF")}</a></div>` : ""}
+          ${when ? `<div class="row"><b>Submitted:</b> ${new Date(when).toLocaleString()}</div>` : ""}
+          <textarea id="fb-${s.id}" rows="2" placeholder="Write feedback for the student...">${esc(feedbackValue)}</textarea>
+          <div class="actions">
+            <button class="approve" onclick="review('${s.id}', 'approved')">✓ Approve</button>
+            <button class="revision" onclick="review('${s.id}', 'needs_revision')">⚠ Needs Revision</button>
+          </div>
+        </div>`;
+    }).join("");
+  }
+
+  async function review(id, status) {
+    const feedback = document.getElementById(`fb-${id}`).value;
+    const res = await fetch(`${API_BASE}/mentor/submissions/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status, mentor_feedback: feedback, mentorId }),
+    });
+    if (!res.ok) { alert((await res.json()).error); return; }
+    load();
+  }
+
+  load();
+</script>
+</body>
+</html>

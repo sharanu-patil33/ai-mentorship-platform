@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Learning Resources</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+    --card-bg: rgba(30, 41, 59, 0.7);
+    --card-border: rgba(255, 255, 255, 0.08);
+    --primary: #6366f1;
+    --primary-hover: #4f46e5;
+    --primary-light: rgba(99, 102, 241, 0.15);
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --danger: #ef4444;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-gradient);
+    color: var(--text-main);
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+
+  header {
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--card-border);
+    padding: 18px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  header h1 {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  header a {
+    color: var(--text-muted);
+    font-size: 13px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+
+  header a:hover {
+    color: var(--text-main);
+  }
+
+  .container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 36px 24px;
+  }
+
+  .page-title {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+  }
+
+  .page-sub {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 36px;
+  }
+
+  .program-section {
+    margin-bottom: 40px;
+  }
+
+  .program-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--card-border);
+  }
+
+  .program-icon {
+    font-size: 22px;
+    width: 42px;
+    height: 42px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    border: 1px solid var(--card-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .program-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-main);
+    letter-spacing: -0.2px;
+  }
+
+  .videos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+  }
+
+  .video-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--card-border);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .video-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(99, 102, 241, 0.4);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
+  }
+
+  .video-thumb {
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: #090d16 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    border-bottom: 1px solid var(--card-border);
+  }
+
+  .video-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .play-overlay {
+    position: absolute;
+    width: 48px;
+    height: 48px;
+    background: rgba(239, 68, 68, 0.9);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 16px;
+    padding-left: 3px;
+    box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
+    transition: transform 0.2s;
+  }
+
+  .video-card:hover .play-overlay {
+    transform: scale(1.1);
+    background: #ef4444;
+  }
+
+  .video-info {
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  .video-channel {
+    font-size: 11px;
+    color: var(--danger);
+    font-weight: 700;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .video-title {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.4;
+    margin-bottom: 8px;
+    color: var(--text-main);
+  }
+
+  .video-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 14px;
+    flex: 1;
+  }
+
+  .tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: var(--primary-light);
+    color: var(--primary);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    width: fit-content;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📺 Learning Resources</h1>
+  <a href="student-dashboard.html">← Back to Dashboard</a>
+</header>
+
+<div class="container">
+  <div class="page-title">Course Resources</div>
+  <p class="page-sub">Curated YouTube playlists and channels for each program — handpicked to match your curriculum.</p>
+
+  <!-- AI/ML Engineering -->
+  <div class="program-section">
+    <div class="program-header">
+      <span class="program-icon">🤖</span>
+      <span class="program-name">AI/ML Engineering</span>
+    </div>
+    <div class="videos-grid">
+      <a class="video-card" href="https://www.youtube.com/watch?v=aircAruvnKk&list=PLZHQObOWTQDNU6R1_67000Dx_ZCJB-3pi" target="_blank">
+        <div class="video-thumb">
+          <div class="play-overlay">▶</div>
+        </div>
+        <div class="video-info">
+          <div class="video-channel">3Blue1Brown</div>
+          <div class="video-title">Neural Networks — Visual Introduction</div>
+          <div class="video-desc">Beautiful visual explanations of how neural networks actually work from the ground up.</div>
+          <span class="tag">Fundamentals</span>
+        </div>
+      </a>
+      <a class="video-card" href="https://www.youtube.com/watch?v=bPrmA1SEN2k&list=PLZoTAELRMXVPBTrWtJkn3wWQxZkmTXGwe" target="_blank">
+        <div class="video-thumb">
+          <div class="play-overlay">▶</div>
+        </div>
+        <div class="video-info">
+          <div class="video-channel">codebasics</div>
+          <div class="video-title">Machine Learning Full Playlist</div>
+          <div class="video-desc">Practical ML engineering — step by step from basics to real-world projects with Python.</div>
+          <span class="tag">Practical ML</span>
+        </div>
+      </a>
+      <a class="video-card" href="https://www.youtube.com/watch?v=ySEx_Bqxvvo&list=PLhhyoLH6IjfxeoooqP9rhU3HJIAVAJ3Vz" target="_blank">
+        <div class="video-thumb">
+          <div class="play-overlay">▶</div>
+        </div>
+        <div class="video-info">
+          <div class="video-channel">Andrej Karpathy</div>
+          <div class="video-title">Neural Networks: Zero to Hero</div>
+          <div class="video-desc">Build neural networks and GPT from scratch — the deepest free course on LLMs available.</div>
+          <span class="tag">LLMs & Deep Learning</span>
+        </div>
+      </a>
+      <a class="video-card" href="https://www.youtube.com/watch?v=i_LwzRVP7bg" target="_blank">
+        <div class="video-thumb">
+          <div class="play-overlay">▶</div>
+        </div>
+        <div class="video-info">
+          <div class="video-channel">Sentdex</div>
+          <div class="video-title">Python for Machine Learning & AI</div>
+          <div class="video-desc">Learn data preprocessing, model building, and evaluation hands-on with Python.</div>
+          <span class="tag">Python & Data</span>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Full-Stack Development -->
+  <div class="program-section">
+    <div class="program-header">
+      <span class="program-icon">💻</span>
+      <span class="program-name">Full-Stack Development</span>
+    </div>
+    <div class="videos-grid">
+      <a class="video-card" href="https://www.youtube.com/watch?v=w7ejDZ8SWv8" target="_blank">
+        <div class="video-thumb">
+          <div class="play-overlay">▶</div>
+        </div>
+        <div class="video-info">
+          <div class="video-channel">Traversy Media</div>
+          <div class="video-title">React JS Crash Course</div>
+          <div class="video-desc">The go-to React crash course — components, state, hooks, and building real apps.</div>
+          <span class="tag">React</span>
+        </div>
+      </a>
+      <a class="video-card" href="https://www.youtube.com/watch?v=Oe421EPjeBE" target="_blank">
+        <div class="video-thumb">
+          <div class="play-overlay">▶</div>
+        </div>
+        <div class="video-info">
+          <div class="video-channel">freeCodeCamp</div>
+          <div class="video-title">Node.js & Express Full Course</div>
+          <div class="video-desc">Build REST APIs with Node.js and Express — authentication, middleware, and databases.</div>
+          <span class="tag">Node.js & APIs</span>
+        </div>
+      </a>
+      <a class="video-card" href="https://www.youtube.com/watch?v=98BzS5Oz5E4&list=PL4cUxeGkcC9g8OhpOZxNdhXggFz2lOuCT" target="_blank">
+        <div class="video-thumb">
+          <div class="play-overlay">▶</div>
+        </div>
+        <div class="video-info">
+          <div class="video-channel">The Net Ninja</div>
+          <div class="video-title">Full Stack MERN Project Tutorial</div>
+          <div class="video-desc">Build a full-stack MERN application with authentication from scratch step by step.</div>
+          <span class="tag">Full Stack Project</span>
+        </div>
+      </a>
+      <a class="video-card" href="https://www.youtube.com/watch?v=rHux0gMZ3Eg" target="_blank">
+        <div class="video-thumb">
+          <div class="play-overlay">▶</div>
+        </div>
+        <div class="video-info">
+          <div class="video-channel">Traversy Media</div>
+          <div class="video-title">SQL & Database Design for Developers</div>
+          <div class="video-desc">SQL fundamentals, schema design, and connecting databases to your backend apps.</div>
+          <span class="tag">Database Design</span>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Cloud & DevOps -->
+  <div class="program-section">
+    <div class="program-header">
+      <span class="program-icon">☁️</span>
+      <span class="program-name">Cloud & DevOps</span>
+    </div>
+    <div class="videos-grid">
+      <a class="video-card" href="https://www.youtube.com/watch?v=k1RI5locZE4" target="_blank">
+        <div class="video-thumb">
+          <div class="play-overlay">▶</div>
+        </div>
+        <div class="video-info">
+          <div class="video-channel">freeCodeCamp</div>
+          <div class="video-title">AWS Cloud Practitioner Full Course</div>
+          <div class="video-desc">Complete AWS fundamentals — EC2, S3, IAM, Lambda, and core cloud concepts.</div>
+          <span class="tag">AWS & Cloud</span>
+        </div>
+      </a>
+      <a class="video-card" href="https://www.youtube.com/watch?v=fqMOX6JJhGo" target="_blank">
+        <div class="video-thumb">
+          <div class="play-overlay">▶</div>
+        </div>
+        <div class="video-info">
+          <div class="video-channel">freeCodeCamp</div>
+          <div class="video-title">Docker & Kubernetes Full Course</div>
+          <div class="video-desc">Containers, Docker images, Kubernetes orchestration — everything you need to know.</div>
+          <span class="tag">Docker & K8s</span>
+        </div>
+      </a>
+      <a class="video-card" href="https://www.youtube.com/watch?v=scEDHsr3APg" target="_blank">
+        <div class="video-thumb">
+          <div class="play-overlay">▶</div>
+        </div>
+        <div class="video-info">
+          <div class="video-channel">TechWorld with Nana</div>
+          <div class="video-title">CI/CD Pipeline Tutorial</div>
+          <div class="video-desc">Build real CI/CD pipelines with GitHub Actions — automate testing, building and deployment.</div>
+          <span class="tag">CI/CD</span>
+        </div>
+      </a>
+      <a class="video-card" href="https://www.youtube.com/watch?v=IPvYjXCsTg8" target="_blank">
+        <div class="video-thumb">
+          <div class="play-overlay">▶</div>
+        </div>
+        <div class="video-info">
+          <div class="video-channel">TechWorld with Nana</div>
+          <div class="video-title">Terraform Full Course</div>
+          <div class="video-desc">Infrastructure as Code with Terraform — provision and manage cloud resources automatically.</div>
+          <span class="tag">Infrastructure as Code</span>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <!-- Cybersecurity -->
+  <div class="program-section">
+    <div class="program-header">
+      <span class="program-icon">🔐</span>
+      <span class="program-name">Cybersecurity</span>
+    </div>
+    <div class="videos-grid">
+      <a class="video-card" href="https://www.youtube.com/watch?v=3Kq1MIfTWCE" target="_blank">
+        <div class="video-thumb">
+          <div class="play-overlay">▶</div>
+        </div>
+        <div class="video-info">
+          <div class="video-channel">Professor Messer</div>
+          <div class="video-title">Network Security Fundamentals</div>
+          <div class="video-desc">Core networking and security concepts — firewalls, protocols, encryption fundamentals.</div>
+          <span class="tag">Network Security</span>
+        </div>
+      </a>
+      <a class="video-card" href="https://www.youtube.com/watch?v=XLvPpirlmEs" target="_blank">
+        <div class="video-thumb">
+          <div class="play-overlay">▶</div>
+        </div>
+        <div class="video-info">
+          <div class="video-channel">David Bombal</div>
+          <div class="video-title">Ethical Hacking Full Course</div>
+          <div class="video-desc">Practical ethical hacking — penetration testing, Kali Linux, and real attack techniques.</div>
+          <span class="tag">Ethical Hacking</span>
+        </div>
+      </a>
+      <a class="video-card" href="https://www.youtube.com/watch?v=inWWhr5tnEA" target="_blank">
+        <div class="video-thumb">
+          <div class="play-overlay">▶</div>
+        </div>
+        <div class="video-info">
+          <div class="video-channel">LiveOverflow</div>
+          <div class="video-title">Web Application Security & Hacking</div>
+          <div class="video-desc">Web vulnerabilities, XSS, SQL injection, and how to find and fix security bugs in apps.</div>
+          <span class="tag">Web Security</span>
+        </div>
+      </a>
+      <a class="video-card" href="https://www.youtube.com/watch?v=dz7Ntp7KQGA" target="_blank">
+        <div class="video-thumb">
+          <div class="play-overlay">▶</div>
+        </div>
+        <div class="video-info">
+          <div class="video-channel">Simply Cyber</div>
+          <div class="video-title">Cybersecurity Incident Response</div>
+          <div class="video-desc">How to detect, respond to, and recover from security incidents in real organizations.</div>
+          <span class="tag">Incident Response</span>
+        </div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Require student login
+  if (!localStorage.getItem("studentId")) {
+    window.location.href = "auth.html";
+  }
+</script>
+
+</body>
+</html>

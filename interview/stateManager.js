@@ -4,12 +4,14 @@ import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
-const MAX_QUESTIONS_PER_TOPIC = 4;
-const MAX_TOTAL_QUESTIONS = 15;
+const MAX_QUESTIONS_PER_PHASE = {
+  introduction: 3,
+  projects: 4,
+  hobbies: 2,
+  technical: 4,
+};
+const MAX_TECHNICAL_QUESTIONS = 12;
 
-// Rebuild state purely from what's in the database.
-// This means the server can be stateless — any instance can handle any request,
-// and a page refresh mid-interview doesn't lose progress.
 export async function rebuildState(sessionId) {
   const { data: session, error: sessionError } = await supabase
     .from("interview_sessions")
@@ -28,29 +30,59 @@ export async function rebuildState(sessionId) {
 
   if (qaError) throw qaError;
 
-  const knownTopics = session.students.known_topics; // e.g. ["React", "Node.js"]
+  const knownTopics = session.students.known_topics || [];
+  // Always have at least one topic — fallback to General Programming
+  const topicNames = knownTopics.length > 0 ? knownTopics : ["General Programming"];
 
-  // Group logged answers by topic to figure out where we left off
-  const topics = knownTopics.map((name) => {
-    const topicQAs = qaLog.filter((q) => q.topic === name);
+  // Count Q&As per phase
+  const introCount = qaLog.filter(q => q.topic === "introduction").length;
+  const projectCount = qaLog.filter(q => q.topic === "projects").length;
+  const hobbyCount = qaLog.filter(q => q.topic === "hobbies").length;
+  const techQAs = qaLog.filter(q => !["introduction", "projects", "hobbies"].includes(q.topic));
+
+  // Determine current phase
+  let phase = "introduction";
+  let phaseQuestions = introCount;
+
+  if (introCount >= MAX_QUESTIONS_PER_PHASE.introduction) {
+    phase = "projects";
+    phaseQuestions = projectCount;
+  }
+  if (projectCount >= MAX_QUESTIONS_PER_PHASE.projects) {
+    phase = "hobbies";
+    phaseQuestions = hobbyCount;
+  }
+  if (hobbyCount >= MAX_QUESTIONS_PER_PHASE.hobbies) {
+    phase = "technical";
+    phaseQuestions = techQAs.length;
+  }
+
+  // Rebuild technical topic state
+  const topics = topicNames.map(name => {
+    const topicQAs = techQAs.filter(q => q.topic === name);
     return {
       name,
       questionsAsked: topicQAs.length,
-      scores: topicQAs.map((q) => q.depth_score),
+      scores: topicQAs.map(q => q.depth_score),
     };
   });
 
-  // Find current topic: first one not yet at the per-topic limit
-  let currentTopicIndex = topics.findIndex((t) => t.questionsAsked < MAX_QUESTIONS_PER_TOPIC);
-  if (currentTopicIndex === -1) currentTopicIndex = topics.length; // all done
+  let currentTopicIndex = topics.findIndex(t => t.questionsAsked < MAX_QUESTIONS_PER_PHASE.technical);
+  if (currentTopicIndex === -1) currentTopicIndex = topics.length;
+
+  const totalTechnical = techQAs.length;
+  const isComplete = phase === "technical" &&
+    (totalTechnical >= MAX_TECHNICAL_QUESTIONS || currentTopicIndex >= topics.length);
 
   return {
     sessionId,
+    phase,
+    phaseQuestions,
     topics,
     currentTopicIndex,
     totalQuestions: qaLog.length,
     lastAnswer: qaLog.length ? qaLog[qaLog.length - 1].answer : null,
     lastQuestion: qaLog.length ? qaLog[qaLog.length - 1].question : null,
-    isComplete: qaLog.length >= MAX_TOTAL_QUESTIONS || currentTopicIndex >= topics.length,
+    isComplete,
   };
 }
