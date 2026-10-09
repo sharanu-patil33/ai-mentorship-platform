@@ -264,6 +264,8 @@
   <h1>🎓 Mentor Portal</h1>
   <div class="user-info">
     <span id="mentorName">Loading...</span>
+    <button class="logout-btn" onclick="openMeetSpace('/dashboard', 'mentor-auth.html')">🎥 Rooms</button>
+    <button class="logout-btn" onclick="openMeetSpace('/chat', 'mentor-auth.html')">💬 Discussion &amp; Messages</button>
     <button class="logout-btn" onclick="logout()">Log Out</button>
   </div>
 </header>
@@ -288,6 +290,7 @@
   <div id="studentList"><p class="empty">Loading students...</p></div>
 </div>
 
+<script src="meetspace-link.js"></script>
 <script>
   const API_BASE = "http://localhost:3000/api";
 
@@ -300,9 +303,11 @@
 
   document.getElementById("mentorName").textContent = mentorName || "Mentor";
 
-  function logout() {
+  async function logout() {
     localStorage.removeItem("mentorId");
     localStorage.removeItem("mentorName");
+    if (typeof signOutMeetSpace === "function") await signOutMeetSpace();
+    if (typeof clearSupabaseSession === "function") clearSupabaseSession();
     window.location.href = "mentor-auth.html";
   }
 
@@ -361,4 +366,4 @@
 </script>
 
 </body>
-</html>
+</html> 

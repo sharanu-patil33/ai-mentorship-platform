@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="meetspace-link.js"></script>
 <style>
   :root {
     --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
@@ -318,9 +319,12 @@
   document.getElementById("headerName").textContent = studentName || "Student";
   document.getElementById("welcomeMsg").textContent = `Welcome back, ${studentName || "there"}!`;
 
-  function logout() {
+  async function logout() {
     localStorage.removeItem("studentId");
     localStorage.removeItem("studentName");
+    // End the MeetSpace session too (waits a moment), then clear the platform login
+    if (typeof signOutMeetSpace === "function") await signOutMeetSpace();
+    if (typeof clearSupabaseSession === "function") clearSupabaseSession();
     window.location.href = "auth.html";
   }
 
@@ -334,6 +338,8 @@
 
     const interviewData = await interviewRes.json();
     const dashData = await dashRes.json();
+    window.currentUserEmail = dashData.student && dashData.student.email;
+    if (typeof syncMeetSpaceOwner === "function") syncMeetSpaceOwner(window.currentUserEmail);
     const projData = await projRes.json();
     const finalData = await finalRes.json();
 
@@ -395,12 +401,23 @@
         locked: !hasPrograms,
       },
       {
-        icon: "💬",
-        title: "Discourse & Zoom",
-        desc: "Join your mentor's sessions, ask questions, and collaborate with peers.",
+        icon: "🎥",
+        title: "Rooms & Meetings",
+        desc: "Join or host live meeting rooms with your mentor and classmates.",
         status: hasPrograms ? "active" : "locked",
-        statusLabel: hasPrograms ? "Join Session" : "Locked",
+        statusLabel: hasPrograms ? "Open Rooms" : "Locked",
         href: "#",
+        onclick: "openMeetSpace('/dashboard')",
+        locked: !hasPrograms,
+      },
+      {
+        icon: "💬",
+        title: "Discourse & Messages",
+        desc: "Community discussion with everyone, plus personal messages with your mentor and peers.",
+        status: hasPrograms ? "active" : "locked",
+        statusLabel: hasPrograms ? "Open Discourse" : "Locked",
+        href: "#",
+        onclick: "openMeetSpace('/chat')",
         locked: !hasPrograms,
       },
       {
@@ -443,7 +460,8 @@
 
     grid.innerHTML = cards.map(c => `
       <a class="card ${c.locked ? 'locked' : ''} ${c.status === 'done' ? 'completed' : ''}"
-         href="${c.locked ? '#' : c.href}">
+         href="${c.locked ? '#' : c.href}"
+         ${!c.locked && c.onclick ? `onclick="${c.onclick}; return false;"` : ''}>
         <div class="card-icon">${c.icon}</div>
         <div class="card-title">${c.title}</div>
         <div class="card-desc">${c.desc}</div>
