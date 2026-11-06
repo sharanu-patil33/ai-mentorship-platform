@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Interview Summary</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+    --card-bg: rgba(30, 41, 59, 0.7);
+    --card-border: rgba(255, 255, 255, 0.08);
+    --primary: #6366f1;
+    --primary-hover: #4f46e5;
+    --primary-light: rgba(99, 102, 241, 0.15);
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --success: #10b981;
+    --success-light: rgba(16, 185, 129, 0.15);
+    --warning: #f59e0b;
+    --warning-light: rgba(245, 158, 11, 0.15);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-gradient);
+    color: var(--text-main);
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+  header {
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--card-border);
+    padding: 18px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  header h1 { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+  a.back { color: var(--text-muted); font-size: 13px; text-decoration: none; font-weight: 500; }
+  a.back:hover { color: var(--text-main); }
+  .container { max-width: 760px; margin: 0 auto; padding: 36px 24px; }
+  .page-title { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 6px; }
+  .page-sub { font-size: 14px; color: var(--text-muted); margin-bottom: 28px; }
+  .box {
+    background: var(--card-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--card-border);
+    border-radius: 18px;
+    padding: 24px;
+    margin-bottom: 18px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  }
+  .box h3 { font-size: 15px; font-weight: 700; margin-bottom: 12px; letter-spacing: -0.2px; }
+  .box p { font-size: 14px; line-height: 1.6; color: var(--text-muted); }
+  .pill {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin: 3px 4px 3px 0;
+    background: var(--primary-light);
+    color: var(--primary);
+    border: 1px solid rgba(99,102,241,0.3);
+  }
+  .pill.basic { background: var(--warning-light); color: var(--warning); border-color: rgba(245,158,11,0.3); }
+  .pill.intermediate { background: var(--primary-light); color: var(--primary); border-color: rgba(99,102,241,0.3); }
+  .pill.advanced { background: var(--success-light); color: var(--success); border-color: rgba(16,185,129,0.3); }
+  ul.list { list-style: none; }
+  ul.list li { font-size: 14px; color: var(--text-muted); line-height: 1.6; padding: 6px 0 6px 18px; position: relative; }
+  ul.list li::before { content: "•"; position: absolute; left: 4px; color: var(--primary); }
+  .project { border-top: 1px solid var(--card-border); padding-top: 12px; margin-top: 12px; }
+  .project:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+  .project b { font-size: 14px; }
+  .project .tech { font-size: 12px; color: var(--primary); margin: 4px 0; }
+  .project p { font-size: 13px; }
+  .next-box { border-color: rgba(99,102,241,0.4); }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 13px 24px;
+    background: var(--primary);
+    color: #fff;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    margin: 10px 10px 0 0;
+    transition: all 0.2s;
+  }
+  .btn:hover { background: var(--primary-hover); transform: translateY(-1px); }
+  .btn.secondary { background: rgba(255,255,255,0.06); color: var(--text-main); border: 1px solid var(--card-border); }
+  .btn.secondary:hover { background: rgba(255,255,255,0.1); }
+  .error { color: #ef4444; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎙️ Interview Summary</h1>
+  <a class="back" href="student-dashboard.html">← Back to Dashboard</a>
+</header>
+
+<div class="container">
+  <div class="page-title">Your Interview Summary</div>
+  <p class="page-sub">Here's how your initial interview went and what you can do next.</p>
+  <div id="content" style="color: var(--text-muted); font-size: 14px;">Loading your summary...</div>
+</div>
+
+<script>
+  const API_BASE = "http://localhost:3000/api";
+  const studentId = localStorage.getItem("studentId");
+  if (!studentId) window.location.href = "auth.html";
+
+  const params = new URLSearchParams(window.location.search);
+  let sessionId = params.get("sessionId");
+  const content = document.getElementById("content");
+
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+
+  async function init() {
+    // If opened without a sessionId, use the student's latest completed interview
+    if (!sessionId) {
+      const r = await fetch(`${API_BASE}/student/${studentId}/interview-status`);
+      const d = await r.json();
+      sessionId = d.sessionId;
+    }
+
+    if (!sessionId) {
+      content.innerHTML = `<p>You haven't completed your interview yet.</p><a class="btn" href="index.html">Start Interview →</a>`;
+      return;
+    }
+
+    const [sumRes, dashRes] = await Promise.all([
+      fetch(`${API_BASE}/interview/${sessionId}/summary`),
+      fetch(`${API_BASE}/student/${studentId}/dashboard`),
+    ]);
+
+    const sumData = await sumRes.json();
+    if (sumData.error) {
+      content.innerHTML = `<p class="error">${esc(sumData.error)}</p>`;
+      return;
+    }
+
+    const dashData = await dashRes.json();
+    const enrolled = dashData.programs && dashData.programs.length > 0;
+    render(sumData.summary, enrolled);
+  }
+
+  function render(s, enrolled) {
+    let html = "";
+
+    if (s.introduction) {
+      html += `<div class="box"><h3>👋 About You</h3><p>${esc(s.introduction)}</p></div>`;
+    }
+
+    const projects = Array.isArray(s.past_projects) ? s.past_projects : [];
+    if (projects.length) {
+      html += `<div class="box"><h3>🛠️ Projects You Shared</h3>` + projects.map(p => `
+        <div class="project">
+          <b>${esc(p.name)}</b>
+          ${(p.tech || []).length ? `<div class="tech">${p.tech.map(esc).join(" · ")}</div>` : ""}
+          ${p.description ? `<p>${esc(p.description)}</p>` : ""}
+        </div>`).join("") + `</div>`;
+    }
+
+    const scores = s.topic_scores && typeof s.topic_scores === "object" ? Object.entries(s.topic_scores) : [];
+    if (scores.length) {
+      html += `<div class="box"><h3>📊 Technical Level</h3>` +
+        scores.map(([topic, level]) => `<span class="pill ${esc(level)}">${esc(topic)}: ${esc(level)}</span>`).join("") +
+        `</div>`;
+    }
+
+    if ((s.strengths || []).length) {
+      html += `<div class="box"><h3>💪 Your Strengths</h3><ul class="list">` +
+        s.strengths.map(x => `<li>${esc(x)}</li>`).join("") + `</ul></div>`;
+    }
+
+    if ((s.weaknesses || []).length) {
+      html += `<div class="box"><h3>🌱 Areas to Grow</h3><ul class="list">` +
+        s.weaknesses.map(x => `<li>${esc(x)}</li>`).join("") + `</ul></div>`;
+    }
+
+    if (s.hobbies || (s.soft_skills || []).length) {
+      html += `<div class="box"><h3>✨ Beyond Tech</h3>` +
+        (s.hobbies ? `<p style="margin-bottom:10px;">${esc(s.hobbies)}</p>` : "") +
+        (s.soft_skills || []).map(x => `<span class="pill">${esc(x)}</span>`).join("") +
+        `</div>`;
+    }
+
+    if (s.overall_summary) {
+      html += `<div class="box"><h3>📝 Overall</h3><p>${esc(s.overall_summary)}</p></div>`;
+    }
+
+    // What to do next
+    html += `<div class="box next-box"><h3>🚀 What's Next</h3>`;
+    if (enrolled) {
+      html += `<p>You're already enrolled in your programs. Keep going with your learning and mentor sessions.</p>
+        <a class="btn" href="student-dashboard.html">Go to Dashboard</a>
+        <a class="btn secondary" href="dashboard.html">View My Progress</a>`;
+    } else {
+      html += `<p>Based on this interview, we've picked programs that fit you. Review all 4 programs and choose the 2 you want to learn.</p>
+        <a class="btn" href="programs.html?sessionId=${encodeURIComponent(sessionId)}&studentId=${encodeURIComponent(studentId)}">Choose Your Programs →</a>
+        <a class="btn secondary" href="student-dashboard.html">Back to Dashboard</a>`;
+    }
+    html += `</div>`;
+
+    content.innerHTML = html;
+  }
+
+  init();
+</script>
+
+</body>
+</html>
